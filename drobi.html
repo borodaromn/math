@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="uk" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Симулятор додавання та віднімання звичайних дробів</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.05); }
+    }
+    .animate-glow {
+      animation: pulse-glow 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-full w-full overflow-hidden flex flex-col justify-between p-2 select-none">
+
+  <!-- TOP HEADER & CONTROL BAR -->
+  <header class="bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-2 shadow-xl backdrop-blur-md flex-shrink-0">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      
+      <!-- Title -->
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg bg-indigo-600/30 border border-indigo-500/50 flex items-center justify-center text-indigo-400 font-bold text-sm">½</div>
+        <div>
+          <h1 class="text-sm sm:text-base font-bold text-white leading-tight">Додавання та віднімання дробів</h1>
+          <p class="text-[11px] text-slate-400 hidden sm:block">Покрокова анімація та візуалізація НСЗ і додаткових множників</p>
+        </div>
+      </div>
+
+      <!-- Controls & Input -->
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Fraction 1 -->
+        <div class="flex items-center gap-1 bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-700">
+          <div class="flex flex-col items-center">
+            <input id="num1" type="number" min="1" max="99" value="1" class="w-10 text-center bg-slate-900 border border-slate-700 rounded text-amber-300 font-bold text-xs focus:outline-none focus:border-amber-400 py-0.5">
+            <div class="w-full h-0.5 bg-slate-600 my-0.5"></div>
+            <input id="den1" type="number" min="1" max="99" value="3" class="w-10 text-center bg-slate-900 border border-slate-700 rounded text-cyan-300 font-bold text-xs focus:outline-none focus:border-cyan-400 py-0.5">
+          </div>
+        </div>
+
+        <!-- Operation Selector -->
+        <div class="flex gap-1">
+          <button id="opAdd" onclick="setOperation('+')" class="px-2.5 py-1 bg-indigo-600 text-white font-bold text-xs rounded hover:bg-indigo-500 transition shadow">
+            +
+          </button>
+          <button id="opSub" onclick="setOperation('-')" class="px-2.5 py-1 bg-slate-800 text-slate-300 font-bold text-xs rounded hover:bg-slate-700 transition">
+            -
+          </button>
+        </div>
+
+        <!-- Fraction 2 -->
+        <div class="flex items-center gap-1 bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-700">
+          <div class="flex flex-col items-center">
+            <input id="num2" type="number" min="1" max="99" value="1" class="w-10 text-center bg-slate-900 border border-slate-700 rounded text-amber-300 font-bold text-xs focus:outline-none focus:border-amber-400 py-0.5">
+            <div class="w-full h-0.5 bg-slate-600 my-0.5"></div>
+            <input id="den2" type="number" min="1" max="99" value="6" class="w-10 text-center bg-slate-900 border border-slate-700 rounded text-cyan-300 font-bold text-xs focus:outline-none focus:border-cyan-400 py-0.5">
+          </div>
+        </div>
+
+        <!-- Presets Dropdown -->
+        <select id="presetSelect" onchange="loadPreset(this.value)" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded px-2 py-1.5 focus:outline-none hidden sm:block">
+          <option value="">-- Пресети --</option>
+          <option value="1/3+1/6">1/3 + 1/6 (Простий спільного)</option>
+          <option value="3/4+2/5">3/4 + 2/5 (Незалежні знаменники)</option>
+          <option value="5/6-1/4">5/6 - 1/4 (Пошук НСК)</option>
+          <option value="7/8-3/8">7/8 - 3/8 (Однакові знаменники)</option>
+          <option value="3/8+5/12">3/8 + 5/12 (Складніший НСК)</option>
+        </select>
+
+        <button onclick="initCalculation()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg font-semibold text-xs transition flex items-center gap-1 shadow-lg shadow-emerald-900/30">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Запуск
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN VIEWPORT GRID (Fills remaining height) -->
+  <main class="max-w-7xl mx-auto w-full flex-1 grid grid-cols-1 lg:grid-cols-12 gap-2 my-2 min-h-0 overflow-hidden">
+
+    <!-- LEFT: Step Visualizer & Math Formula (8 Cols) -->
+    <section class="lg:col-span-8 bg-slate-900/60 border border-slate-800 rounded-xl p-3 flex flex-col justify-between shadow-xl relative min-h-0">
+      
+      <!-- Top Step Counter & Controls -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2 flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-800/50" id="stepBadge">
+            Крок 1 з 5
+          </span>
+          <span class="text-xs text-slate-300 font-medium" id="stepTitle">Аналіз умови</span>
+        </div>
+
+        <div class="flex items-center gap-1">
+          <button onclick="prevStep()" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+          <button id="playBtn" onclick="togglePlay()" class="px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition flex items-center gap-1">
+            <span id="playIcon">▶</span> <span id="playText">Старт</span>
+          </button>
+          <button onclick="nextStep()" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+          
+          <select id="speedSelect" onchange="setSpeed(this.value)" class="ml-1 bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded px-1 py-1">
+            <option value="2500">0.5x</option>
+            <option value="1500" selected>1.0x</option>
+            <option value="800">1.5x</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Center Math Expression Display -->
+      <div class="my-auto py-3 flex flex-wrap items-center justify-center gap-2 sm:gap-4 mono text-base sm:text-2xl bg-slate-950/50 rounded-xl border border-slate-800/80 p-3 flex-shrink-0">
+        
+        <!-- Fraction 1 with Multiplier slot -->
+        <div class="relative flex flex-col items-center">
+          <span id="m1" class="absolute -top-6 text-[11px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 opacity-0 transition-opacity duration-300"></span>
+          <span id="n1" class="font-bold text-amber-300 px-1.5 py-0.5 rounded transition-all">1</span>
+          <div class="w-full h-0.5 bg-slate-500 my-0.5 rounded"></div>
+          <span id="d1" class="font-bold text-cyan-300 px-1.5 py-0.5 rounded transition-all">3</span>
+        </div>
+
+        <!-- Op Sign -->
+        <span id="opSign" class="font-bold text-indigo-400 text-lg sm:text-2xl">+</span>
+
+        <!-- Fraction 2 with Multiplier slot -->
+        <div class="relative flex flex-col items-center">
+          <span id="m2" class="absolute -top-6 text-[11px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 opacity-0 transition-opacity duration-300"></span>
+          <span id="n2" class="font-bold text-amber-300 px-1.5 py-0.5 rounded transition-all">1</span>
+          <div class="w-full h-0.5 bg-slate-500 my-0.5 rounded"></div>
+          <span id="d2" class="font-bold text-cyan-300 px-1.5 py-0.5 rounded transition-all">6</span>
+        </div>
+
+        <!-- Equals Sign 1 -->
+        <span id="eq1" class="font-bold text-slate-500 text-lg sm:text-2xl transition-colors">=</span>
+
+        <!-- Common Denominator Stage -->
+        <div id="commonStage" class="hidden flex items-center gap-2">
+          <div class="flex flex-col items-center">
+            <span id="cnCombo" class="font-bold text-amber-300 px-1.5 py-0.5 rounded transition-all text-sm sm:text-lg">1×2 + 1×1</span>
+            <div class="w-full h-0.5 bg-slate-500 my-0.5 rounded"></div>
+            <span id="cdCommon" class="font-bold text-emerald-400 px-1.5 py-0.5 rounded transition-all">6</span>
+          </div>
+        </div>
+
+        <!-- Equals Sign 2 -->
+        <span id="eq2" class="hidden font-bold text-slate-500 text-lg sm:text-2xl transition-colors">=</span>
+
+        <!-- Final Result Fraction -->
+        <div id="resultStage" class="hidden flex items-center gap-2">
+          <!-- Whole part if mixed -->
+          <span id="wholePart" class="hidden text-2xl sm:text-3xl font-extrabold text-yellow-400">1</span>
+
+          <div class="flex flex-col items-center">
+            <span id="resNum" class="font-bold text-amber-300 px-1.5 py-0.5 rounded transition-all">3</span>
+            <div class="w-full h-0.5 bg-slate-500 my-0.5 rounded"></div>
+            <span id="resDen" class="font-bold text-emerald-400 px-1.5 py-0.5 rounded transition-all">6</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Explanation Text Box -->
+      <div class="bg-indigo-950/40 border border-indigo-800/40 rounded-lg p-2.5 flex-shrink-0">
+        <div class="flex items-start gap-2">
+          <div class="text-indigo-400 mt-0.5 flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div>
+            <h4 class="text-[11px] font-bold text-indigo-300 uppercase tracking-wider mb-0.5">Пояснення кроку</h4>
+            <p id="stepDesc" class="text-xs sm:text-sm text-slate-200 leading-snug">Вхідні дані задано. Натисніть "Старт" або користуйтесь навігацією.</p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- RIGHT: Pie Chart Visualizer & Info Panel (4 Cols) -->
+    <section class="lg:col-span-4 flex flex-col gap-2 min-h-0">
+      
+      <!-- Graphical Pie Visualizer -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 shadow-xl flex flex-col items-center justify-between flex-1 min-h-0">
+        <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider self-start flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+          Графічне представлення
+        </h3>
+
+        <!-- SVG Pie Containers -->
+        <div class="flex items-center justify-center gap-2 sm:gap-3 my-1 w-full">
+          <!-- Pie 1 -->
+          <div class="flex flex-col items-center gap-0.5">
+            <svg id="pie1" class="w-16 h-16 sm:w-20 sm:h-20 transform -rotate-90" viewBox="0 0 32 32"></svg>
+            <span class="text-[10px] text-amber-300 font-bold mono" id="pieLabel1">1/3</span>
+          </div>
+
+          <span class="text-slate-500 font-bold text-base" id="pieOp">+</span>
+
+          <!-- Pie 2 -->
+          <div class="flex flex-col items-center gap-0.5">
+            <svg id="pie2" class="w-16 h-16 sm:w-20 sm:h-20 transform -rotate-90" viewBox="0 0 32 32"></svg>
+            <span class="text-[10px] text-cyan-300 font-bold mono" id="pieLabel2">1/6</span>
+          </div>
+
+          <span class="text-slate-500 font-bold text-base">=</span>
+
+          <!-- Pie Result -->
+          <div class="flex flex-col items-center gap-0.5">
+            <svg id="pieRes" class="w-16 h-16 sm:w-20 sm:h-20 transform -rotate-90" viewBox="0 0 32 32"></svg>
+            <span class="text-[10px] text-emerald-400 font-bold mono" id="pieLabelRes">?</span>
+          </div>
+        </div>
+
+        <p class="text-[10px] text-slate-400 text-center italic">
+          Кругові діаграми часток цілого.
+        </p>
+      </div>
+
+      <!-- Math Summary Card -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-2.5 shadow-xl flex-shrink-0">
+        <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          Аналітичні характеристики
+        </h3>
+
+        <div class="grid grid-cols-2 gap-2 text-xs mono">
+          <div class="bg-slate-950 p-1.5 rounded border border-slate-800">
+            <div class="text-[9px] text-slate-500 uppercase">НСК знаменників</div>
+            <div id="lcmVal" class="text-xs sm:text-sm font-bold text-cyan-300">6</div>
+          </div>
+
+          <div class="bg-slate-950 p-1.5 rounded border border-slate-800">
+            <div class="text-[9px] text-slate-500 uppercase">НСД чис/знам</div>
+            <div id="gcdVal" class="text-xs sm:text-sm font-bold text-emerald-300">1</div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    let currentOp = '+';
+    let currentStep = 0;
+    let totalSteps = 5;
+    let autoPlayTimer = null;
+    let playSpeed = 1500;
+
+    let calc = {
+      n1: 1, d1: 3,
+      n2: 1, d2: 6,
+      lcm: 6,
+      m1: 2, m2: 1,
+      newN1: 2, newN2: 1,
+      resRawNum: 3,
+      resDen: 6,
+      gcd: 3,
+      finalNum: 1,
+      finalDen: 2,
+      whole: 0,
+      remNum: 1
+    };
+
+    function getGCD(a, b) {
+      return b === 0 ? a : getGCD(b, a % b);
+    }
+
+    function getLCM(a, b) {
+      return (a * b) / getGCD(a, b);
+    }
+
+    function setOperation(op) {
+      currentOp = op;
+      document.getElementById('opAdd').className = op === '+' 
+        ? 'px-2.5 py-1 bg-indigo-600 text-white font-bold text-xs rounded hover:bg-indigo-500 transition shadow' 
+        : 'px-2.5 py-1 bg-slate-800 text-slate-300 font-bold text-xs rounded hover:bg-slate-700 transition';
+      document.getElementById('opSub').className = op === '-' 
+        ? 'px-2.5 py-1 bg-indigo-600 text-white font-bold text-xs rounded hover:bg-indigo-500 transition shadow' 
+        : 'px-2.5 py-1 bg-slate-800 text-slate-300 font-bold text-xs rounded hover:bg-slate-700 transition';
+      
+      document.getElementById('opSign').innerText = op;
+      document.getElementById('pieOp').innerText = op;
+      initCalculation();
+    }
+
+    function loadPreset(val) {
+      if (!val) return;
+      let op = val.includes('+') ? '+' : '-';
+      let parts = val.split(op);
+      let f1 = parts[0].split('/');
+      let f2 = parts[1].split('/');
+
+      document.getElementById('num1').value = f1[0];
+      document.getElementById('den1').value = f1[1];
+      document.getElementById('num2').value = f2[0];
+      document.getElementById('den2').value = f2[1];
+
+      setOperation(op);
+    }
+
+    function initCalculation() {
+      stopAutoPlay();
+      
+      let n1 = parseInt(document.getElementById('num1').value) || 1;
+      let d1 = parseInt(document.getElementById('den1').value) || 1;
+      let n2 = parseInt(document.getElementById('num2').value) || 1;
+      let d2 = parseInt(document.getElementById('den2').value) || 1;
+
+      n1 = Math.max(1, Math.min(99, n1));
+      d1 = Math.max(1, Math.min(99, d1));
+      n2 = Math.max(1, Math.min(99, n2));
+      d2 = Math.max(1, Math.min(99, d2));
+
+      let lcm = getLCM(d1, d2);
+      let m1 = lcm / d1;
+      let m2 = lcm / d2;
+
+      let newN1 = n1 * m1;
+      let newN2 = n2 * m2;
+
+      let resRawNum = currentOp === '+' ? (newN1 + newN2) : (newN1 - newN2);
+      
+      if (resRawNum < 0) {
+        alert('Увага: Результат від’ємний. Чисельники поміняно місцями.');
+        document.getElementById('num1').value = n2;
+        document.getElementById('num2').value = n1;
+        initCalculation();
+        return;
+      }
+
+      let gcd = getGCD(Math.abs(resRawNum), lcm);
+      let finalNum = resRawNum / gcd;
+      let finalDen = lcm / gcd;
+
+      let whole = Math.floor(finalNum / finalDen);
+      let remNum = finalNum % finalDen;
+
+      calc = { n1, d1, n2, d2, lcm, m1, m2, newN1, newN2, resRawNum, resDen: lcm, gcd, finalNum, finalDen, whole, remNum };
+
+      document.getElementById('n1').innerText = n1;
+      document.getElementById('d1').innerText = d1;
+      document.getElementById('n2').innerText = n2;
+      document.getElementById('d2').innerText = d2;
+
+      document.getElementById('m1').innerText = `×${m1}`;
+      document.getElementById('m2').innerText = `×${m2}`;
+
+      document.getElementById('cnCombo').innerText = `${newN1} ${currentOp} ${newN2}`;
+      document.getElementById('cdCommon').innerText = lcm;
+
+      document.getElementById('resNum').innerText = resRawNum;
+      document.getElementById('resDen').innerText = lcm;
+
+      document.getElementById('lcmVal').innerText = lcm;
+      document.getElementById('gcdVal').innerText = gcd;
+
+      drawPie('pie1', n1, d1, '#f59e0b');
+      drawPie('pie2', n2, d2, '#06b6d4');
+      drawPie('pieRes', 0, 1, '#10b981');
+
+      document.getElementById('pieLabel1').innerText = `${n1}/${d1}`;
+      document.getElementById('pieLabel2').innerText = `${n2}/${d2}`;
+      document.getElementById('pieLabelRes').innerText = `?`;
+
+      currentStep = 0;
+      renderStep();
+    }
+
+    function renderStep() {
+      const steps = [
+        {
+          title: "Аналіз знаменників",
+          desc: `Оглядаємо знаменники <b>${calc.d1}</b> та <b>${calc.d2}</b>. ${calc.d1 === calc.d2 ? "Однакові знаменники!" : `Спільний знаменник (НСК) для <b>${calc.d1}</b> та <b>${calc.d2}</b> дорівнює <b>${calc.lcm}</b>.`}`
+        },
+        {
+          title: "Додаткові множники",
+          desc: `Множники: 1-й дріб — <b>${calc.lcm} ÷ ${calc.d1} = ${calc.m1}</b>; 2-й дріб — <b>${calc.lcm} ÷ ${calc.d2} = ${calc.m2}</b>.`
+        },
+        {
+          title: `${currentOp === '+' ? 'Додавання' : 'Віднімання'} чисельників`,
+          desc: `Під спільним знаменником <b>${calc.lcm}</b>: обчислюємо <b>${calc.newN1} ${currentOp} ${calc.newN2} = ${calc.resRawNum}</b>.`
+        },
+        {
+          title: "Скорочення дробу",
+          desc: calc.gcd > 1 
+            ? `Дріб <b>${calc.resRawNum}/${calc.lcm}</b> скорочуємо на НСД = <b>${calc.gcd}</b> отримуємо <b>${calc.finalNum}/${calc.finalDen}</b>.`
+            : `Дріб <b>${calc.resRawNum}/${calc.lcm}</b> є несокротним.`
+        },
+        {
+          title: "Ціла частина",
+          desc: calc.finalNum >= calc.finalDen && calc.finalDen !== 1
+            ? `Неправильний дріб: <b>${calc.finalNum} ÷ ${calc.finalDen} = ${calc.whole}</b> і залишок <b>${calc.remNum}</b>.`
+            : `Обчислення завершено успішно!`
+        }
+      ];
+
+      document.getElementById('stepBadge').innerText = `Крок ${currentStep + 1} з 5`;
+      document.getElementById('stepTitle').innerText = steps[currentStep].title;
+      document.getElementById('stepDesc').innerHTML = steps[currentStep].desc;
+
+      document.getElementById('m1').classList.add('opacity-0');
+      document.getElementById('m2').classList.add('opacity-0');
+      document.getElementById('commonStage').classList.add('hidden');
+      document.getElementById('eq1').classList.add('hidden');
+      document.getElementById('eq2').classList.add('hidden');
+      document.getElementById('resultStage').classList.add('hidden');
+      document.getElementById('wholePart').classList.add('hidden');
+
+      document.getElementById('d1').className = "font-bold text-cyan-300 px-1.5 py-0.5 rounded transition-all";
+      document.getElementById('d2').className = "font-bold text-cyan-300 px-1.5 py-0.5 rounded transition-all";
+      document.getElementById('n1').className = "font-bold text-amber-300 px-1.5 py-0.5 rounded transition-all";
+      document.getElementById('n2').className = "font-bold text-amber-300 px-1.5 py-0.5 rounded transition-all";
+
+      if (currentStep === 0) {
+        document.getElementById('d1').className = "font-bold text-cyan-300 bg-cyan-950 border border-cyan-500 px-1.5 py-0.5 rounded animate-pulse";
+        document.getElementById('d2').className = "font-bold text-cyan-300 bg-cyan-950 border border-cyan-500 px-1.5 py-0.5 rounded animate-pulse";
+      } else if (currentStep === 1) {
+        document.getElementById('m1').classList.remove('opacity-0');
+        document.getElementById('m2').classList.remove('opacity-0');
+      } else if (currentStep === 2) {
+        document.getElementById('m1').classList.remove('opacity-0');
+        document.getElementById('m2').classList.remove('opacity-0');
+        document.getElementById('eq1').classList.remove('hidden');
+        document.getElementById('commonStage').classList.remove('hidden');
+        drawPie('pieRes', calc.resRawNum, calc.lcm, '#6366f1');
+        document.getElementById('pieLabelRes').innerText = `${calc.resRawNum}/${calc.lcm}`;
+      } else if (currentStep === 3) {
+        document.getElementById('m1').classList.remove('opacity-0');
+        document.getElementById('m2').classList.remove('opacity-0');
+        document.getElementById('eq1').classList.remove('hidden');
+        document.getElementById('commonStage').classList.remove('hidden');
+        document.getElementById('eq2').classList.remove('hidden');
+        document.getElementById('resultStage').classList.remove('hidden');
+        document.getElementById('resNum').innerText = calc.finalNum;
+        document.getElementById('resDen').innerText = calc.finalDen;
+        drawPie('pieRes', calc.finalNum, calc.finalDen, '#10b981');
+        document.getElementById('pieLabelRes').innerText = `${calc.finalNum}/${calc.finalDen}`;
+      } else if (currentStep === 4) {
+        document.getElementById('m1').classList.remove('opacity-0');
+        document.getElementById('m2').classList.remove('opacity-0');
+        document.getElementById('eq1').classList.remove('hidden');
+        document.getElementById('commonStage').classList.remove('hidden');
+        document.getElementById('eq2').classList.remove('hidden');
+        document.getElementById('resultStage').classList.remove('hidden');
+
+        if (calc.whole > 0) {
+          document.getElementById('wholePart').classList.remove('hidden');
+          document.getElementById('wholePart').innerText = calc.whole;
+          document.getElementById('resNum').innerText = calc.remNum;
+          document.getElementById('resDen').innerText = calc.finalDen;
+          if (calc.remNum === 0) {
+            document.getElementById('resNum').parentElement.classList.add('hidden');
+          } else {
+            document.getElementById('resNum').parentElement.classList.remove('hidden');
+          }
+        } else {
+          document.getElementById('resNum').innerText = calc.finalNum;
+          document.getElementById('resDen').innerText = calc.finalDen;
+        }
+
+        drawPie('pieRes', calc.finalNum, calc.finalDen, '#10b981');
+        document.getElementById('pieLabelRes').innerText = calc.whole > 0 
+          ? (calc.remNum > 0 ? `${calc.whole} ${calc.remNum}/${calc.finalDen}` : `${calc.whole}`)
+          : `${calc.finalNum}/${calc.finalDen}`;
+      }
+    }
+
+    function drawPie(svgId, numerator, denominator, color) {
+      const svg = document.getElementById(svgId);
+      svg.innerHTML = '';
+      if (denominator <= 0) return;
+
+      const fraction = Math.min(1, Math.max(0, numerator / denominator));
+      const radius = 16;
+
+      const bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      bgCircle.setAttribute('cx', '16');
+      bgCircle.setAttribute('cy', '16');
+      bgCircle.setAttribute('r', '16');
+      bgCircle.setAttribute('fill', '#1e293b');
+      svg.appendChild(bgCircle);
+
+      if (fraction > 0) {
+        const fillCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        fillCircle.setAttribute('cx', '16');
+        fillCircle.setAttribute('cy', '16');
+        fillCircle.setAttribute('r', '8');
+        fillCircle.setAttribute('fill', 'transparent');
+        fillCircle.setAttribute('stroke', color);
+        fillCircle.setAttribute('stroke-width', '16');
+        fillCircle.setAttribute('stroke-dasharray', `${fraction * 50.26} 50.26`);
+        svg.appendChild(fillCircle);
+      }
+    }
+
+    function nextStep() {
+      if (currentStep < totalSteps - 1) {
+        currentStep++;
+        renderStep();
+      } else {
+        stopAutoPlay();
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        renderStep();
+      }
+    }
+
+    function togglePlay() {
+      if (autoPlayTimer) {
+        stopAutoPlay();
+      } else {
+        startAutoPlay();
+      }
+    }
+
+    function startAutoPlay() {
+      if (currentStep >= totalSteps - 1) currentStep = 0;
+      renderStep();
+      document.getElementById('playIcon').innerText = '⏸';
+      document.getElementById('playText').innerText = 'Пауза';
+      autoPlayTimer = setInterval(() => {
+        if (currentStep < totalSteps - 1) {
+          nextStep();
+        } else {
+          stopAutoPlay();
+        }
+      }, playSpeed);
+    }
+
+    function stopAutoPlay() {
+      if (autoPlayTimer) {
+        clearInterval(autoPlayTimer);
+        autoPlayTimer = null;
+      }
+      document.getElementById('playIcon').innerText = '▶';
+      document.getElementById('playText').innerText = 'Старт';
+    }
+
+    function setSpeed(val) {
+      playSpeed = parseInt(val);
+      if (autoPlayTimer) {
+        stopAutoPlay();
+        startAutoPlay();
+      }
+    }
+
+    window.onload = () => {
+      initCalculation();
+    };
+  </script>
+</body>
+</html>

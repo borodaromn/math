@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Множення в стовпчик — Симулятор</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono-custom { font-family: 'JetBrains Mono', monospace; }
+        .glow-gold { text-shadow: 0 0 8px rgba(251, 191, 36, 0.9); }
+        .glow-blue { text-shadow: 0 0 8px rgba(96, 165, 250, 0.9); }
+        .glow-emerald { text-shadow: 0 0 8px rgba(52, 211, 153, 0.9); }
+        .glow-purple { text-shadow: 0 0 8px rgba(192, 132, 252, 0.9); }
+
+        .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.5); border-radius: 2px; }
+
+        @keyframes drop-anim {
+            0% { transform: translateY(-8px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        .animate-drop { animation: drop-anim 0.35s ease-out forwards; }
+
+        @keyframes shift-anim {
+            0% { transform: translateX(10px); opacity: 0.5; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        .animate-shift { animation: shift-anim 0.4s ease-out forwards; }
+    </style>
+</head>
+<body class="h-screen max-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between select-none overflow-x-hidden p-1.5 sm:p-3">
+
+    <!-- ТОР-БАР ТА ВВІД ДАНИХ -->
+    <header class="bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-2 shadow-lg backdrop-blur-md flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <h1 class="text-xs sm:text-sm font-extrabold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-amber-300 to-blue-400 uppercase font-mono-custom">
+                Множення в стовпчик
+            </h1>
+        </div>
+
+        <!-- Поля вводу -->
+        <div class="flex items-center gap-1.5 text-xs font-mono-custom">
+            <div class="flex items-center gap-1 bg-slate-950 border border-slate-700 px-2 py-1 rounded-lg">
+                <span class="text-blue-400 font-bold">Множник 1:</span>
+                <input type="number" id="input-factor1" value="425" min="1" max="99999" class="w-16 sm:w-20 bg-slate-900 text-amber-300 font-extrabold text-center rounded border border-slate-700 focus:outline-none focus:border-amber-400">
+            </div>
+            <span class="text-slate-500 font-bold">×</span>
+            <div class="flex items-center gap-1 bg-slate-950 border border-slate-700 px-2 py-1 rounded-lg">
+                <span class="text-purple-400 font-bold">Множник 2:</span>
+                <input type="number" id="input-factor2" value="32" min="1" max="9999" class="w-12 sm:w-16 bg-slate-900 text-purple-300 font-extrabold text-center rounded border border-slate-700 focus:outline-none focus:border-purple-400">
+            </div>
+            <button onclick="applyCustomInput()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition active:scale-95 shadow">
+                Обчислити
+            </button>
+        </div>
+
+        <!-- Пресети та Керування -->
+        <div class="flex items-center gap-2 text-[11px] font-mono-custom">
+            <div class="hidden sm:flex items-center gap-1 text-[10px] text-slate-400">
+                <input type="range" id="speed-range" min="300" max="2000" step="100" value="1000" oninput="updateSpeedLabel()" class="w-14 accent-amber-400">
+                <span id="speed-val" class="text-amber-300 w-7">1.0s</span>
+            </div>
+
+            <button id="btn-play" onclick="togglePlay()" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-lg transition active:scale-95 shadow">
+                ▶ Старт
+            </button>
+            <button onclick="stepBack()" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition active:scale-95">
+                ⏮ Назад
+            </button>
+            <button onclick="stepForward()" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition active:scale-95">
+                Вперед ⏭
+            </button>
+            <button onclick="resetMultiplication()" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition">
+                ⏹ Скинути
+            </button>
+        </div>
+    </header>
+
+    <!-- ПРЕCEТИ -->
+    <div class="flex items-center gap-1.5 px-1 py-0.5 text-[10px] font-mono-custom text-slate-400 overflow-x-auto">
+        <span class="text-slate-500 font-bold uppercase">Приклади:</span>
+        <button onclick="loadPreset(358, 4)" class="px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-blue-300 rounded border border-slate-800">358 × 4</button>
+        <button onclick="loadPreset(425, 32)" class="px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-blue-300 rounded border border-slate-800">425 × 32</button>
+        <button onclick="loadPreset(148, 25)" class="px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-blue-300 rounded border border-slate-800">148 × 25</button>
+        <button onclick="loadPreset(532, 104)" class="px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-blue-300 rounded border border-slate-800">532 × 104</button>
+        <button onclick="loadPreset(79, 68)" class="px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-blue-300 rounded border border-slate-800">79 × 68</button>
+    </div>
+
+    <!-- ОСНОВНА СЕКЦІЯ (ДВОКОЛОНКОВА) -->
+    <main class="flex-1 my-1 flex flex-col lg:flex-row gap-2 max-w-6xl w-full mx-auto min-h-0">
+        
+        <!-- ЛІВА ПАНЕЛЬ: ПОЛЕ МНОЖЕННЯ В СТОВПЧИК -->
+        <section class="flex-1 bg-slate-900/80 border border-slate-800 rounded-xl p-3 shadow-xl flex flex-col justify-between overflow-hidden relative">
+            <div class="flex items-center justify-between mb-1 border-b border-slate-800 pb-1">
+                <span class="text-xs font-bold text-slate-400 uppercase font-mono-custom">Дошка розв'язання</span>
+                <span id="step-counter-badge" class="text-[10px] font-mono-custom px-2 py-0.5 bg-slate-950 text-amber-300 rounded border border-slate-800">
+                    Крок 0 / 0
+                </span>
+            </div>
+
+            <!-- ГРАФІЧНА ЗОНА -->
+            <div class="flex-1 overflow-auto custom-scroll flex items-center justify-center py-2 font-mono-custom text-base sm:text-xl leading-relaxed">
+                <div id="multiplication-board" class="inline-block min-w-[280px] text-right">
+                    <!-- Динамічний стовпчик генерується тут -->
+                </div>
+            </div>
+
+            <!-- СТАТУСНИЙ РЯДОК -->
+            <div class="flex items-center justify-between text-[11px] font-mono-custom bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-400">Добуток:</span>
+                    <strong id="live-product-val" class="text-emerald-400 font-extrabold text-sm glow-emerald">—</strong>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-400">Етап:</span>
+                    <strong id="live-stage-val" class="text-amber-400 font-extrabold text-xs">—</strong>
+                </div>
+            </div>
+        </section>
+
+        <!-- ПРАВА ПАНЕЛЬ: ПОЯСНЕННЯ КРОКІВ ТА ПЕРЕВІРКА -->
+        <section class="w-full lg:w-96 bg-slate-900/80 border border-slate-800 rounded-xl p-3 shadow-xl flex flex-col justify-between gap-2">
+            
+            <!-- Пояснення поточного кроку -->
+            <div class="flex-1 flex flex-col">
+                <div class="flex items-center justify-between mb-1.5 border-b border-slate-800 pb-1">
+                    <span class="text-xs font-bold text-amber-300 uppercase font-mono-custom flex items-center gap-1">
+                        💡 Пояснення кроку
+                    </span>
+                    <span id="step-type-badge" class="text-[9px] font-mono-custom px-1.5 py-0.2 bg-amber-400/20 text-amber-300 rounded border border-amber-400/40">
+                        Старт
+                    </span>
+                </div>
+
+                <div id="step-description-box" class="flex-1 text-xs font-mono-custom text-slate-200 bg-slate-950 p-2.5 rounded-lg border border-slate-800 leading-relaxed overflow-y-auto custom-scroll flex flex-col justify-center">
+                    Натисніть "Старт" або "Вперед", щоб розпочати покрокове множення.
+                </div>
+            </div>
+
+            <!-- Блок перевірки -->
+            <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 font-mono-custom text-xs">
+                <div class="text-[10px] font-bold uppercase text-slate-400 mb-1">
+                    Формула множення:
+                </div>
+                <div id="verification-formula" class="text-slate-300 text-[11px] leading-tight">
+                    Множник 1 × Множник 2 = Добуток
+                </div>
+                <div id="verification-calc" class="text-emerald-400 font-bold text-xs mt-1">
+                    —
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- НИЖНЯ ЛЕГЕНДА -->
+    <footer class="bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-1.5 shadow flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono-custom text-slate-400">
+        <div class="flex items-center gap-3">
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-blue-500"></span> Множник 1</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-purple-500"></span> Множник 2</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-amber-400"></span> Жовті числа / добутки</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-emerald-400"></span> Результат</span>
+        </div>
+        <div class="text-slate-500">Українська шкільна методика множення в стовпчик</div>
+    </footer>
+
+    <script>
+        let factor1 = 425;
+        let factor2 = 32;
+
+        let steps = [];
+        let currentStepIdx = -1;
+
+        let isPlaying = false;
+        let playTimer = null;
+        let animSpeedMs = 1000;
+
+        window.onload = () => {
+            applyCustomInput();
+        };
+
+        function updateSpeedLabel() {
+            animSpeedMs = parseInt(document.getElementById('speed-range').value);
+            document.getElementById('speed-val').textContent = (animSpeedMs / 1000).toFixed(1) + 's';
+        }
+
+        function loadPreset(f1, f2) {
+            document.getElementById('input-factor1').value = f1;
+            document.getElementById('input-factor2').value = f2;
+            applyCustomInput();
+        }
+
+        function applyCustomInput() {
+            stopPlay();
+            const f1 = parseInt(document.getElementById('input-factor1').value);
+            const f2 = parseInt(document.getElementById('input-factor2').value);
+
+            if (isNaN(f1) || f1 <= 0 || isNaN(f2) || f2 <= 0) {
+                alert('Будь ласка, введіть коректні додатні числа!');
+                return;
+            }
+
+            factor1 = f1;
+            factor2 = f2;
+
+            generateMultiplicationSteps();
+            currentStepIdx = 0;
+            renderCurrentStep();
+        }
+
+        function generateMultiplicationSteps() {
+            steps = [];
+            const f1Str = factor1.toString();
+            const f2Str = factor2.toString();
+            const totalProduct = factor1 * factor2;
+
+            steps.push({
+                type: 'INIT',
+                desc: `Готовність помножити <strong>${factor1}</strong> на <strong>${factor2}</strong> покроково. Натисніть "Вперед".`,
+                f1ActiveIdx: -1,
+                f2ActiveIdx: -1,
+                currentPartialDigits: [],
+                partialProducts: [],
+                stage: 'Початок'
+            });
+
+            let partialProducts = [];
+
+            for (let i = f2Str.length - 1; i >= 0; i--) {
+                let d2Char = f2Str[i];
+                let d2Val = parseInt(d2Char);
+                let shift = f2Str.length - 1 - i;
+
+                let carry = 0;
+                let currentPartialDigits = [];
+
+                steps.push({
+                    type: 'START_ROW',
+                    desc: `Множимо верхнє число <strong>${factor1}</strong> на цифру <strong>${d2Char}</strong> (розряд ${getPlaceName(shift)}).`,
+                    f1ActiveIdx: -1,
+                    f2ActiveIdx: i,
+                    currentPartialDigits: [],
+                    partialProducts: JSON.parse(JSON.stringify(partialProducts)),
+                    stage: `Множення на ${d2Char}`
+                });
+
+                for (let j = f1Str.length - 1; j >= 0; j--) {
+                    let d1Char = f1Str[j];
+                    let d1Val = parseInt(d1Char);
+                    let mult = d1Val * d2Val + carry;
+                    let writeDigit = mult % 10;
+                    let newCarry = Math.floor(mult / 10);
+
+                    currentPartialDigits.unshift(writeDigit);
+
+                    steps.push({
+                        type: 'MULTIPLY_PAIR',
+                        desc: `Множимо цифру <strong>${d1Char}</strong> на <strong>${d2Char}</strong> = ${d1Val * d2Val}${carry > 0 ? ` + залишок ${carry}` : ''} = <strong>${mult}</strong>. Пишемо <strong>${writeDigit}</strong>${newCarry > 0 ? `, запам'ятовуємо ${newCarry}` : ''}.`,
+                        f1ActiveIdx: j,
+                        f2ActiveIdx: i,
+                        currentPartialDigits: [...currentPartialDigits],
+                        carry: carry,
+                        newCarry: newCarry,
+                        partialProducts: JSON.parse(JSON.stringify(partialProducts)),
+                        stage: `Множення на ${d2Char}`
+                    });
+
+                    carry = newCarry;
+                }
+
+                if (carry > 0) {
+                    currentPartialDigits.unshift(carry);
+                    steps.push({
+                        type: 'MULTIPLY_CARRY',
+                        desc: `Записуємо залишок <strong>${carry}</strong> на початку рядка.`,
+                        f1ActiveIdx: -1,
+                        f2ActiveIdx: i,
+                        currentPartialDigits: [...currentPartialDigits],
+                        partialProducts: JSON.parse(JSON.stringify(partialProducts)),
+                        stage: `Множення на ${d2Char}`
+                    });
+                }
+
+                let fullPartialVal = parseInt(currentPartialDigits.join('')) * Math.pow(10, shift);
+                let fullPartialStr = currentPartialDigits.join('') + '0'.repeat(shift);
+
+                if (shift > 0) {
+                    steps.push({
+                        type: 'SHIFT_PARTIAL',
+                        desc: `Зсуваємо неповний добуток на <strong>${shift}</strong> знак(и) вліво (множення на десятки/сотні). Отримуємо <strong>${fullPartialVal}</strong>.`,
+                        f1ActiveIdx: -1,
+                        f2ActiveIdx: i,
+                        currentPartialDigits: [...currentPartialDigits],
+                        shift: shift,
+                        partialProducts: JSON.parse(JSON.stringify(partialProducts)),
+                        stage: `Зсув`
+                    });
+                }
+
+                partialProducts.push({
+                    val: fullPartialVal,
+                    shift: shift,
+                    str: fullPartialStr
+                });
+            }
+
+            if (f2Str.length > 1) {
+                steps.push({
+                    type: 'PREPARE_SUM',
+                    desc: `🟡 Жовті неповні добутки готові до додавання. Натискаємо жовтий значок <strong>+</strong>, щоб отримати загальну суму!`,
+                    f1ActiveIdx: -1,
+                    f2ActiveIdx: -1,
+                    currentPartialDigits: [],
+                    partialProducts: JSON.parse(JSON.stringify(partialProducts)),
+                    stage: `Додавання`
+                });
+            }
+
+            steps.push({
+                type: 'FINISH',
+                desc: `Множення завершено! Остаточний добуток = <strong>${totalProduct}</strong>.`,
+                f1ActiveIdx: -1,
+                f2ActiveIdx: -1,
+                currentPartialDigits: [],
+                partialProducts: JSON.parse(JSON.stringify(partialProducts)),
+                stage: `Завершено`
+            });
+        }
+
+        function getPlaceName(shift) {
+            if (shift === 0) return 'одиниць';
+            if (shift === 1) return 'десятків';
+            if (shift === 2) return 'сотень';
+            return 'тисяч';
+        }
+
+        function renderCurrentStep() {
+            if (currentStepIdx < 0 || currentStepIdx >= steps.length) return;
+
+            const st = steps[currentStepIdx];
+            
+            document.getElementById('step-counter-badge').textContent = `Крок ${currentStepIdx} / ${steps.length - 1}`;
+            document.getElementById('step-description-box').innerHTML = st.desc;
+            document.getElementById('step-type-badge').textContent = getStepBadgeText(st.type);
+            document.getElementById('live-stage-val').textContent = st.stage;
+
+            const totalProduct = factor1 * factor2;
+            const isFinished = (st.type === 'FINISH');
+            document.getElementById('live-product-val').textContent = isFinished ? totalProduct : '—';
+
+            document.getElementById('verification-formula').textContent = `${factor1} × ${factor2} = ?`;
+            if (isFinished) {
+                document.getElementById('verification-calc').textContent = `✓ ${totalProduct} (Вірно)`;
+                document.getElementById('verification-calc').className = 'text-emerald-400 font-bold text-xs mt-1';
+            } else {
+                document.getElementById('verification-calc').textContent = `⏳ Обчислюється...`;
+                document.getElementById('verification-calc').className = 'text-amber-400 font-bold text-xs mt-1';
+            }
+
+            renderBoard(st);
+        }
+
+        function getStepBadgeText(type) {
+            switch(type) {
+                case 'INIT': return 'Початок';
+                case 'START_ROW': return 'Старт рядка';
+                case 'MULTIPLY_PAIR': return 'Множення пари';
+                case 'MULTIPLY_CARRY': return 'Залишок';
+                case 'SHIFT_PARTIAL': return 'Зсув';
+                case 'PREPARE_SUM': return 'Додавання';
+                case 'FINISH': return 'Завершено';
+                default: return 'Крок';
+            }
+        }
+
+        function renderBoard(st) {
+            const board = document.getElementById('multiplication-board');
+            board.innerHTML = '';
+
+            const f1Str = factor1.toString();
+            const f2Str = factor2.toString();
+
+            const container = document.createElement('div');
+            container.className = 'flex flex-col items-end';
+
+            const row1 = document.createElement('div');
+            row1.className = 'tracking-widest font-extrabold text-lg sm:text-2xl text-blue-300 flex items-center';
+            f1Str.split('').forEach((ch, idx) => {
+                const span = document.createElement('span');
+                span.textContent = ch;
+                span.className = 'inline-block px-0.5';
+                if (st.f1ActiveIdx === idx) {
+                    span.className += ' bg-blue-500 text-slate-950 font-black rounded glow-blue scale-110';
+                }
+                row1.appendChild(span);
+            });
+            container.appendChild(row1);
+
+            const row2 = document.createElement('div');
+            row2.className = 'tracking-widest font-extrabold text-lg sm:text-2xl text-purple-300 flex items-center';
+            
+            const signSpan = document.createElement('span');
+            signSpan.textContent = '× ';
+            signSpan.className = 'text-slate-400 mr-1 text-sm sm:text-lg';
+            row2.appendChild(signSpan);
+
+            f2Str.split('').forEach((ch, idx) => {
+                const span = document.createElement('span');
+                span.textContent = ch;
+                span.className = 'inline-block px-0.5';
+                if (st.f2ActiveIdx === idx) {
+                    span.className += ' bg-purple-500 text-slate-950 font-black rounded glow-purple scale-110';
+                }
+                row2.appendChild(span);
+            });
+            container.appendChild(row2);
+
+            const hr1 = document.createElement('div');
+            hr1.className = 'w-full border-b-2 border-slate-600 my-1';
+            container.appendChild(hr1);
+
+            const partials = st.partialProducts || [];
+            partials.forEach((part) => {
+                const pRow = document.createElement('div');
+                pRow.className = 'tracking-widest font-extrabold text-base sm:text-xl text-amber-300 glow-gold';
+                pRow.textContent = part.str;
+                container.appendChild(pRow);
+            });
+
+            if (st.currentPartialDigits && st.currentPartialDigits.length > 0 && st.type !== 'FINISH' && st.type !== 'PREPARE_SUM') {
+                const activeRow = document.createElement('div');
+                activeRow.className = 'tracking-widest font-extrabold text-base sm:text-xl text-amber-300 bg-amber-400/20 px-1 rounded glow-gold';
+                
+                if (st.type === 'SHIFT_PARTIAL') {
+                    activeRow.className += ' animate-shift';
+                    activeRow.textContent = st.currentPartialDigits.join('') + '0'.repeat(st.shift);
+                } else {
+                    activeRow.textContent = st.currentPartialDigits.join('');
+                }
+                container.appendChild(activeRow);
+            }
+
+            if (f2Str.length > 1 && (st.type === 'PREPARE_SUM' || st.type === 'FINISH')) {
+                const hr2 = document.createElement('div');
+                hr2.className = 'w-full border-b-2 border-slate-600 my-1 relative flex items-center justify-start';
+                
+                const plusBadge = document.createElement('span');
+                plusBadge.textContent = '+';
+                plusBadge.className = 'absolute -left-5 -top-3 w-5 h-5 bg-amber-400 text-slate-950 rounded-full font-black text-xs flex items-center justify-center glow-gold animate-bounce';
+                hr2.appendChild(plusBadge);
+
+                container.appendChild(hr2);
+
+                const finalRow = document.createElement('div');
+                finalRow.className = 'tracking-widest font-extrabold text-lg sm:text-2xl text-emerald-400 glow-emerald';
+                finalRow.textContent = st.type === 'FINISH' ? (factor1 * factor2) : '';
+                if (st.type === 'FINISH') {
+                    finalRow.className += ' animate-drop';
+                }
+                container.appendChild(finalRow);
+            }
+
+            board.appendChild(container);
+        }
+
+        function togglePlay() {
+            if (isPlaying) {
+                stopPlay();
+            } else {
+                startPlay();
+            }
+        }
+
+        function startPlay() {
+            if (currentStepIdx >= steps.length - 1) {
+                currentStepIdx = 0;
+            }
+            isPlaying = true;
+            document.getElementById('btn-play').textContent = '⏸ Пауза';
+            document.getElementById('btn-play').className = 'px-2.5 py-1 bg-amber-400 text-slate-950 font-extrabold rounded-lg transition active:scale-95 shadow glow-gold';
+            
+            runPlayLoop();
+        }
+
+        function runPlayLoop() {
+            if (!isPlaying) return;
+
+            renderCurrentStep();
+
+            if (currentStepIdx < steps.length - 1) {
+                currentStepIdx++;
+                playTimer = setTimeout(runPlayLoop, animSpeedMs);
+            } else {
+                stopPlay();
+            }
+        }
+
+        function stopPlay() {
+            isPlaying = false;
+            if (playTimer) clearTimeout(playTimer);
+            document.getElementById('btn-play').textContent = '▶ Старт';
+            document.getElementById('btn-play').className = 'px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-lg transition active:scale-95 shadow';
+        }
+
+        function stepForward() {
+            stopPlay();
+            if (currentStepIdx < steps.length - 1) {
+                currentStepIdx++;
+                renderCurrentStep();
+            }
+        }
+
+        function stepBack() {
+            stopPlay();
+            if (currentStepIdx > 0) {
+                currentStepIdx--;
+                renderCurrentStep();
+            }
+        }
+
+        function resetMultiplication() {
+            stopPlay();
+            currentStepIdx = 0;
+            renderCurrentStep();
+        }
+    </script>
+</body>
+</html>

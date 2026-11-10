@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ділення в стовпчик куточком — Симулятор</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono-custom { font-family: 'JetBrains Mono', monospace; }
+        .glow-gold { text-shadow: 0 0 8px rgba(251, 191, 36, 0.9); }
+        .glow-blue { text-shadow: 0 0 8px rgba(96, 165, 250, 0.9); }
+        .glow-emerald { text-shadow: 0 0 8px rgba(52, 211, 153, 0.9); }
+        .glow-purple { text-shadow: 0 0 8px rgba(192, 132, 252, 0.9); }
+
+        .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.5); border-radius: 2px; }
+
+        @keyframes drop-anim {
+            0% { transform: translateY(-8px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        .animate-drop { animation: drop-anim 0.35s ease-out forwards; }
+    </style>
+</head>
+<body class="h-screen max-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between select-none overflow-x-hidden p-1.5 sm:p-3">
+
+    <!-- ТОР-БАР ТА ВВІД ДАНИХ -->
+    <header class="bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-2 shadow-lg backdrop-blur-md flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+            <h1 class="text-xs sm:text-sm font-extrabold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-amber-300 to-emerald-400 uppercase font-mono-custom">
+                Ділення в стовпчик куточком
+            </h1>
+        </div>
+
+        <!-- Поля вводу -->
+        <div class="flex items-center gap-1.5 text-xs font-mono-custom">
+            <div class="flex items-center gap-1 bg-slate-950 border border-slate-700 px-2 py-1 rounded-lg">
+                <span class="text-blue-400 font-bold">Ділене:</span>
+                <input type="number" id="input-dividend" value="1560" min="1" max="999999" class="w-16 sm:w-20 bg-slate-900 text-amber-300 font-extrabold text-center rounded border border-slate-700 focus:outline-none focus:border-amber-400">
+            </div>
+            <span class="text-slate-500 font-bold">÷</span>
+            <div class="flex items-center gap-1 bg-slate-950 border border-slate-700 px-2 py-1 rounded-lg">
+                <span class="text-purple-400 font-bold">Дільник:</span>
+                <input type="number" id="input-divisor" value="12" min="1" max="999" class="w-12 sm:w-16 bg-slate-900 text-purple-300 font-extrabold text-center rounded border border-slate-700 focus:outline-none focus:border-purple-400">
+            </div>
+            <button onclick="applyCustomInput()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition active:scale-95 shadow">
+                Обчислити
+            </button>
+        </div>
+
+        <!-- Пресети та анімація -->
+        <div class="flex items-center gap-2 text-[11px] font-mono-custom">
+            <!-- Швидкість -->
+            <div class="hidden sm:flex items-center gap-1 text-[10px] text-slate-400">
+                <input type="range" id="speed-range" min="300" max="2000" step="100" value="1000" oninput="updateSpeedLabel()" class="w-14 accent-amber-400">
+                <span id="speed-val" class="text-amber-300 w-7">1.0s</span>
+            </div>
+
+            <button id="btn-play" onclick="togglePlay()" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-lg transition active:scale-95 shadow">
+                ▶ Старт
+            </button>
+            <button onclick="stepBack()" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition active:scale-95">
+                ⏮ Назад
+            </button>
+            <button onclick="stepForward()" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition active:scale-95">
+                Вперед ⏭
+            </button>
+            <button onclick="resetDivision()" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition">
+                ⏹ Скинути
+            </button>
+        </div>
+    </header>
+
+    <!-- ПРЕCEТИ -->
+    <div class="flex items-center gap-1.5 px-1 py-0.5 text-[10px] font-mono-custom text-slate-400 overflow-x-auto">
+        <span class="text-slate-500 font-bold uppercase">Приклади:</span>
+        <button onclick="loadPreset(846, 3)" class="px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-blue-300 rounded border border-slate-800">846 ÷ 3</button>
+        <button onclick="loadPreset(725, 5)" class="px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-blue-300 rounded border border-slate-800">725 ÷ 5</button>
+        <button onclick="loadPreset(1560, 12)" class="px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-blue-300 rounded border border-slate-800">1560 ÷ 12</button>
+        <button onclick="loadPreset(957, 4)" class="px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-blue-300 rounded border border-slate-800">957 ÷ 4 (із залишком)</button>
+        <button onclick="loadPreset(1024, 8)" class="px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-blue-300 rounded border border-slate-800">1024 ÷ 8</button>
+    </div>
+
+    <!-- ОСНОВНА СЕКЦІЯ (ДВОКОЛОНКОВА) -->
+    <main class="flex-1 my-1 flex flex-col lg:flex-row gap-2 max-w-6xl w-full mx-auto min-h-0">
+        
+        <!-- ЛІВА ПАНЕЛЬ: ПОЛЕ СТОВПЧИКА КУТОЧКОМ -->
+        <section class="flex-1 bg-slate-900/80 border border-slate-800 rounded-xl p-3 shadow-xl flex flex-col justify-between overflow-hidden relative">
+            <div class="flex items-center justify-between mb-1 border-b border-slate-800 pb-1">
+                <span class="text-xs font-bold text-slate-400 uppercase font-mono-custom">Дошка розв'язання</span>
+                <span id="step-counter-badge" class="text-[10px] font-mono-custom px-2 py-0.5 bg-slate-950 text-amber-300 rounded border border-slate-800">
+                    Крок 0 / 0
+                </span>
+            </div>
+
+            <!-- ГРАФІЧНА ЗОНА КУТОЧКА -->
+            <div class="flex-1 overflow-auto custom-scroll flex items-start justify-center py-2 font-mono-custom text-base sm:text-xl leading-relaxed">
+                <div id="division-board" class="inline-block min-w-[280px]">
+                    <!-- Динамічний стовпчик генерується тут -->
+                </div>
+            </div>
+
+            <!-- СТАТУСНИЙ РЯДОК -->
+            <div class="flex items-center justify-between text-[11px] font-mono-custom bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-400">Частка:</span>
+                    <strong id="live-quotient-val" class="text-emerald-400 font-extrabold text-sm glow-emerald">—</strong>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-400">Залишок:</span>
+                    <strong id="live-remainder-val" class="text-rose-400 font-extrabold text-sm">—</strong>
+                </div>
+            </div>
+        </section>
+
+        <!-- ПРАВА ПАНЕЛЬ: ПОЯСНЕННЯ КРОКІВ ТА ПЕРЕВІРКА -->
+        <section class="w-full lg:w-96 bg-slate-900/80 border border-slate-800 rounded-xl p-3 shadow-xl flex flex-col justify-between gap-2">
+            
+            <!-- Пояснення поточного кроку -->
+            <div class="flex-1 flex flex-col">
+                <div class="flex items-center justify-between mb-1.5 border-b border-slate-800 pb-1">
+                    <span class="text-xs font-bold text-amber-300 uppercase font-mono-custom flex items-center gap-1">
+                        💡 Пояснення кроку
+                    </span>
+                    <span id="step-type-badge" class="text-[9px] font-mono-custom px-1.5 py-0.2 bg-amber-400/20 text-amber-300 rounded border border-amber-400/40">
+                        Старт
+                    </span>
+                </div>
+
+                <div id="step-description-box" class="flex-1 text-xs font-mono-custom text-slate-200 bg-slate-950 p-2.5 rounded-lg border border-slate-800 leading-relaxed overflow-y-auto custom-scroll flex flex-col justify-center">
+                    Натисніть "Старт" або "Вперед", щоб розпочати покрокове ділення.
+                </div>
+            </div>
+
+            <!-- Блок перевірки -->
+            <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 font-mono-custom text-xs">
+                <div class="text-[10px] font-bold uppercase text-slate-400 mb-1">
+                    Перевірка ділення:
+                </div>
+                <div id="verification-formula" class="text-slate-300 text-[11px] leading-tight">
+                    (Частка × Дільник) + Залишок = Ділене
+                </div>
+                <div id="verification-calc" class="text-emerald-400 font-bold text-xs mt-1">
+                    —
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- НИЖНЯ ЛЕГЕНДА -->
+    <footer class="bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-1.5 shadow flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono-custom text-slate-400">
+        <div class="flex items-center gap-3">
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-blue-500"></span> Ділене</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-purple-500"></span> Дільник</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-amber-400"></span> Неповне ділене</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-emerald-400"></span> Цифра частки</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-rose-500"></span> Віднімання/Залишок</span>
+        </div>
+        <div class="text-slate-500">Українська шкільна методика ділення куточком</div>
+    </footer>
+
+    <script>
+        let dividend = 1560;
+        let divisor = 12;
+
+        let steps = [];
+        let currentStepIdx = -1;
+
+        let isPlaying = false;
+        let playTimer = null;
+        let animSpeedMs = 1000;
+
+        window.onload = () => {
+            applyCustomInput();
+        };
+
+        function updateSpeedLabel() {
+            animSpeedMs = parseInt(document.getElementById('speed-range').value);
+            document.getElementById('speed-val').textContent = (animSpeedMs / 1000).toFixed(1) + 's';
+        }
+
+        function loadPreset(d1, d2) {
+            document.getElementById('input-dividend').value = d1;
+            document.getElementById('input-divisor').value = d2;
+            applyCustomInput();
+        }
+
+        function applyCustomInput() {
+            stopPlay();
+            const d1 = parseInt(document.getElementById('input-dividend').value);
+            const d2 = parseInt(document.getElementById('input-divisor').value);
+
+            if (isNaN(d1) || d1 <= 0) {
+                alert('Будь ласка, введіть коректне додатне ділене!');
+                return;
+            }
+            if (isNaN(d2) || d2 <= 0) {
+                alert('Дільник має бути більше 0!');
+                return;
+            }
+
+            dividend = d1;
+            divisor = d2;
+
+            generateDivisionSteps();
+            currentStepIdx = 0;
+            renderCurrentStep();
+        }
+
+        function generateDivisionSteps() {
+            steps = [];
+            const dStr = dividend.toString();
+            
+            // Крок 0: Початковий стан
+            steps.push({
+                type: 'INIT',
+                desc: `Готовність до ділення <strong>${dividend}</strong> на <strong>${divisor}</strong>. Натисніть "Вперед".`,
+                quotientSoFar: '',
+                workingRowIdx: -1,
+                highlightIncomplete: null,
+                highlightDivisor: false,
+                highlightQuotientDigitIdx: -1,
+                subtractedProd: null,
+                remainderVal: null,
+                broughtDigit: null,
+                boardState: []
+            });
+
+            let currentWorkingNumStr = '';
+            let quotientStr = '';
+            let digitIdx = 0;
+            let boardLines = []; // зберігає пройдені записи стовпчика
+
+            while (digitIdx < dStr.length) {
+                let broughtDigit = dStr[digitIdx];
+                currentWorkingNumStr += broughtDigit;
+                let currentVal = parseInt(currentWorkingNumStr);
+
+                // Крок A: Виділення неповного діленого / Знесення цифри
+                if (quotientStr.length === 0 && currentVal < divisor) {
+                    // Якщо першого значення замало, беремо наступну цифру
+                    steps.push({
+                        type: 'TAKE_MORE',
+                        desc: `Перша цифра (${currentWorkingNumStr}) менша за дільник (${divisor}). Беремо наступну цифру <strong>${dStr[digitIdx + 1]}</strong>.`,
+                        quotientSoFar: quotientStr,
+                        incompleteVal: currentVal,
+                        digitIdx: digitIdx,
+                        boardState: JSON.parse(JSON.stringify(boardLines))
+                    });
+                    digitIdx++;
+                    continue;
+                }
+
+                // Формуємо крок виділення неповного діленого
+                const stepIncomplete = {
+                    type: 'HIGHLIGHT_INCOMPLETE',
+                    desc: `Формуємо неповне ділене: <strong>${currentVal}</strong>.`,
+                    incompleteVal: currentVal,
+                    quotientSoFar: quotientStr,
+                    digitIdx: digitIdx,
+                    boardState: JSON.parse(JSON.stringify(boardLines))
+                };
+                steps.push(stepIncomplete);
+
+                // Крок B: Ділимо та знаходимо цифру частки
+                let qDigit = Math.floor(currentVal / divisor);
+                let prod = qDigit * divisor;
+                let rem = currentVal - prod;
+
+                steps.push({
+                    type: 'CALC_DIGIT',
+                    desc: `Ділимо <strong>${currentVal}</strong> на <strong>${divisor}</strong>. Отримуємо цифру частки: <strong>${qDigit}</strong> (бо ${qDigit} × ${divisor} = ${prod} ≤ ${currentVal}).`,
+                    incompleteVal: currentVal,
+                    qDigit: qDigit,
+                    prod: prod,
+                    quotientSoFar: quotientStr + qDigit,
+                    digitIdx: digitIdx,
+                    boardState: JSON.parse(JSON.stringify(boardLines))
+                });
+
+                // Крок C: Множимо та віднімаємо
+                quotientStr += qDigit;
+                
+                boardLines.push({
+                    incompleteVal: currentVal,
+                    prod: prod,
+                    rem: rem,
+                    digitPos: digitIdx
+                });
+
+                steps.push({
+                    type: 'SUBTRACT',
+                    desc: `Записуємо ${prod} під неповним діленим ${currentVal}. Віднімаємо: ${currentVal} - ${prod} = <strong>${rem}</strong> (залишок).`,
+                    incompleteVal: currentVal,
+                    prod: prod,
+                    rem: rem,
+                    quotientSoFar: quotientStr,
+                    digitIdx: digitIdx,
+                    boardState: JSON.parse(JSON.stringify(boardLines))
+                });
+
+                // Крок D: Знесення наступної цифри (якщо є)
+                digitIdx++;
+                if (digitIdx < dStr.length) {
+                    let nextDigit = dStr[digitIdx];
+                    steps.push({
+                        type: 'BRING_DOWN',
+                        desc: `Зносимо наступну цифру <strong>${nextDigit}</strong> до залишку ${rem}. Нове значення: <strong>${rem}${nextDigit}</strong>.`,
+                        nextDigit: nextDigit,
+                        rem: rem,
+                        quotientSoFar: quotientStr,
+                        digitIdx: digitIdx,
+                        boardState: JSON.parse(JSON.stringify(boardLines))
+                    });
+                    currentWorkingNumStr = rem.toString();
+                } else {
+                    // Фінал
+                    const finalRem = rem;
+                    steps.push({
+                        type: 'FINISH',
+                        desc: `Ділення завершено! Остаточна частка = <strong>${quotientStr}</strong>, залишок = <strong>${finalRem}</strong>.`,
+                        finalQuotient: quotientStr,
+                        finalRemainder: finalRem,
+                        quotientSoFar: quotientStr,
+                        boardState: JSON.parse(JSON.stringify(boardLines))
+                    });
+                }
+            }
+        }
+
+        function renderCurrentStep() {
+            if (currentStepIdx < 0 || currentStepIdx >= steps.length) return;
+
+            const st = steps[currentStepIdx];
+            
+            // Оновлюємо лічильник
+            document.getElementById('step-counter-badge').textContent = `Крок ${currentStepIdx} / ${steps.length - 1}`;
+            document.getElementById('step-description-box').innerHTML = st.desc;
+            document.getElementById('step-type-badge').textContent = getStepBadgeText(st.type);
+
+            // Оновлюємо частку та залишок у статус-барі
+            document.getElementById('live-quotient-val').textContent = st.quotientSoFar || '0';
+            
+            let lastBoardItem = st.boardState && st.boardState.length > 0 ? st.boardState[st.boardState.length - 1] : null;
+            document.getElementById('live-remainder-val').textContent = lastBoardItem ? lastBoardItem.rem : '0';
+
+            // Оновлення блоку перевірки
+            const qVal = parseInt(st.quotientSoFar) || 0;
+            const rVal = lastBoardItem ? lastBoardItem.rem : 0;
+            const calcRes = (qVal * divisor) + rVal;
+            
+            document.getElementById('verification-formula').textContent = `(${qVal} × ${divisor}) + ${rVal} = ${calcRes}`;
+            if (calcRes === dividend) {
+                document.getElementById('verification-calc').textContent = `✓ ${calcRes} = ${dividend} (Вірно)`;
+                document.getElementById('verification-calc').className = 'text-emerald-400 font-bold text-xs mt-1';
+            } else {
+                document.getElementById('verification-calc').textContent = `⏳ Проміжний результат: ${calcRes}`;
+                document.getElementById('verification-calc').className = 'text-amber-400 font-bold text-xs mt-1';
+            }
+
+            // Малюємо дошку ділення куточком
+            renderBoard(st);
+        }
+
+        function getStepBadgeText(type) {
+            switch(type) {
+                case 'INIT': return 'Початок';
+                case 'TAKE_MORE': return 'Формування';
+                case 'HIGHLIGHT_INCOMPLETE': return 'Неповне ділене';
+                case 'CALC_DIGIT': return 'Пошук частки';
+                case 'SUBTRACT': return 'Віднімання';
+                case 'BRING_DOWN': return 'Знесення цифри';
+                case 'FINISH': return 'Завершено';
+                default: return 'Крок';
+            }
+        }
+
+        function renderBoard(st) {
+            const board = document.getElementById('division-board');
+            board.innerHTML = '';
+
+            const dStr = dividend.toString();
+            const divStr = divisor.toString();
+            const qStr = st.quotientSoFar || '';
+
+            // Верстка куточка:
+            // Верхній рядок: Ділене | Дільник
+            // Під дільником горизонтальна риса, під нею Частка
+
+            const mainGrid = document.createElement('div');
+            mainGrid.className = 'grid grid-cols-2 gap-x-4 items-start font-mono-custom';
+
+            // Ліва колонка: Ділене та вертикальний стовпчик віднімань
+            const leftCol = document.createElement('div');
+            leftCol.className = 'flex flex-col items-start';
+
+            // Рядок 0: Ділене
+            const dividendRow = document.createElement('div');
+            dividendRow.className = 'flex items-center tracking-widest font-extrabold text-lg sm:text-2xl text-blue-300';
+
+            dStr.split('').forEach((char, idx) => {
+                const span = document.createElement('span');
+                span.textContent = char;
+                span.className = 'w-6 text-center inline-block ';
+                
+                // Підсвічування при формуванні неповного діленого
+                if (st.type === 'HIGHLIGHT_INCOMPLETE' || st.type === 'CALC_DIGIT') {
+                    if (idx <= st.digitIdx && idx >= (st.digitIdx - (st.incompleteVal.toString().length - 1))) {
+                        span.className += ' bg-amber-400 text-slate-950 font-black rounded glow-gold scale-110 shadow';
+                    }
+                } else if (st.type === 'BRING_DOWN' && idx === st.digitIdx) {
+                    span.className += ' bg-amber-300 text-slate-950 font-black rounded animate-drop';
+                }
+
+                dividendRow.appendChild(span);
+            });
+            leftCol.appendChild(dividendRow);
+
+            // Побудова під-рядків віднімання
+            if (st.boardState && st.boardState.length > 0) {
+                st.boardState.forEach((bItem, bIdx) => {
+                    const isLast = (bIdx === st.boardState.length - 1);
+
+                    // Рядок добутку (- prod)
+                    const prodRow = document.createElement('div');
+                    prodRow.className = 'flex items-center tracking-widest text-rose-400 font-bold border-b-2 border-slate-600 pb-0.5 mt-1';
+                    
+                    const prodStr = bItem.prod.toString();
+                    const padLength = bItem.digitPos - prodStr.length + 1;
+
+                    for (let p = 0; p < padLength; p++) {
+                        const empty = document.createElement('span');
+                        empty.className = 'w-6 inline-block';
+                        prodRow.appendChild(empty);
+                    }
+
+                    // Знак віднімання
+                    const minus = document.createElement('span');
+                    minus.textContent = '-';
+                    minus.className = 'text-rose-500 font-extrabold -ml-4 mr-1 text-xs sm:text-sm';
+                    prodRow.appendChild(minus);
+
+                    prodStr.split('').forEach(ch => {
+                        const s = document.createElement('span');
+                        s.textContent = ch;
+                        s.className = 'w-6 text-center inline-block';
+                        if (isLast && st.type === 'SUBTRACT') {
+                            s.className += ' bg-rose-500/30 text-rose-200 rounded font-black';
+                        }
+                        prodRow.appendChild(s);
+                    });
+                    leftCol.appendChild(prodRow);
+
+                    // Рядок залишку
+                    const remRow = document.createElement('div');
+                    remRow.className = 'flex items-center tracking-widest font-extrabold text-amber-300 mt-0.5';
+
+                    const remStr = bItem.rem.toString();
+                    const remPad = bItem.digitPos - remStr.length + 1;
+
+                    for (let p = 0; p < remPad; p++) {
+                        const empty = document.createElement('span');
+                        empty.className = 'w-6 inline-block';
+                        remRow.appendChild(empty);
+                    }
+
+                    remStr.split('').forEach(ch => {
+                        const s = document.createElement('span');
+                        s.textContent = ch;
+                        s.className = 'w-6 text-center inline-block';
+                        if (isLast && (st.type === 'SUBTRACT' || st.type === 'BRING_DOWN')) {
+                            s.className += ' text-emerald-400 glow-emerald font-black';
+                        }
+                        remRow.appendChild(s);
+                    });
+
+                    // Якщо є знесена цифра
+                    if (isLast && st.type === 'BRING_DOWN') {
+                        const bDigitSpan = document.createElement('span');
+                        bDigitSpan.textContent = st.nextDigit;
+                        bDigitSpan.className = 'w-6 text-center inline-block bg-amber-400 text-slate-950 font-black rounded animate-drop glow-gold';
+                        remRow.appendChild(bDigitSpan);
+                    }
+
+                    leftCol.appendChild(remRow);
+                });
+            }
+
+            // Права колонка: Дільник та Частка (Куточок)
+            const rightCol = document.createElement('div');
+            rightCol.className = 'flex flex-col border-l-2 border-slate-400 pl-3 min-w-[100px]';
+
+            // Дільник зверху
+            const divisorBox = document.createElement('div');
+            divisorBox.className = 'text-purple-300 font-extrabold text-lg sm:text-2xl tracking-widest pb-1 border-b-2 border-slate-400';
+            divisorBox.textContent = divStr;
+            rightCol.appendChild(divisorBox);
+
+            // Частка знизу
+            const quotientBox = document.createElement('div');
+            quotientBox.className = 'text-emerald-400 font-extrabold text-lg sm:text-2xl tracking-widest pt-1 flex items-center min-h-[36px]';
+            
+            qStr.split('').forEach((ch, idx) => {
+                const qSpan = document.createElement('span');
+                qSpan.textContent = ch;
+                qSpan.className = 'w-5 text-center inline-block';
+                if (idx === qStr.length - 1 && (st.type === 'CALC_DIGIT' || st.type === 'SUBTRACT')) {
+                    qSpan.className += ' bg-emerald-400 text-slate-950 rounded font-black glow-emerald scale-110';
+                }
+                quotientBox.appendChild(qSpan);
+            });
+
+            if (qStr === '') {
+                const placeholder = document.createElement('span');
+                placeholder.textContent = '?';
+                placeholder.className = 'text-slate-600 italic text-sm';
+                quotientBox.appendChild(placeholder);
+            }
+
+            rightCol.appendChild(quotientBox);
+
+            mainGrid.appendChild(leftCol);
+            mainGrid.appendChild(rightCol);
+
+            board.appendChild(mainGrid);
+        }
+
+        function togglePlay() {
+            if (isPlaying) {
+                stopPlay();
+            } else {
+                startPlay();
+            }
+        }
+
+        function startPlay() {
+            if (currentStepIdx >= steps.length - 1) {
+                currentStepIdx = 0;
+            }
+            isPlaying = true;
+            document.getElementById('btn-play').textContent = '⏸ Пауза';
+            document.getElementById('btn-play').className = 'px-2.5 py-1 bg-amber-400 text-slate-950 font-extrabold rounded-lg transition active:scale-95 shadow glow-gold';
+            
+            runPlayLoop();
+        }
+
+        function runPlayLoop() {
+            if (!isPlaying) return;
+
+            renderCurrentStep();
+
+            if (currentStepIdx < steps.length - 1) {
+                currentStepIdx++;
+                playTimer = setTimeout(runPlayLoop, animSpeedMs);
+            } else {
+                stopPlay();
+            }
+        }
+
+        function stopPlay() {
+            isPlaying = false;
+            if (playTimer) clearTimeout(playTimer);
+            document.getElementById('btn-play').textContent = '▶ Старт';
+            document.getElementById('btn-play').className = 'px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-lg transition active:scale-95 shadow';
+        }
+
+        function stepForward() {
+            stopPlay();
+            if (currentStepIdx < steps.length - 1) {
+                currentStepIdx++;
+                renderCurrentStep();
+            }
+        }
+
+        function stepBack() {
+            stopPlay();
+            if (currentStepIdx > 0) {
+                currentStepIdx--;
+                renderCurrentStep();
+            }
+        }
+
+        function resetDivision() {
+            stopPlay();
+            currentStepIdx = 0;
+            renderCurrentStep();
+        }
+    </script>
+</body>
+</html>
+```
+
+I have created an interactive long division visualizer tailored specifically to Ukrainian school methodology. It includes step-by-step animations, clear Ukrainian explanations, custom problem inputs, and verification formulas.
