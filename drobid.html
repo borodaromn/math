@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="uk" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Покроковий симулятор ділення звичайних дробів</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    @keyframes flip-invert {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.1); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+    .animate-flip { animation: flip-invert 0.8s ease-in-out; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-full w-full overflow-hidden flex flex-col justify-between p-2 select-none">
+
+  <!-- TOP HEADER & CONTROL BAR -->
+  <header class="bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-2 shadow-xl backdrop-blur-md flex-shrink-0">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      
+      <!-- Title -->
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg bg-rose-600/30 border border-rose-500/50 flex items-center justify-center text-rose-400 font-bold text-sm">÷</div>
+        <div>
+          <h1 class="text-sm sm:text-base font-bold text-white leading-tight">Ділення звичайних дробів</h1>
+          <p class="text-[11px] text-slate-400 hidden sm:block">Множення на обернений дріб + покрокове скорочення (НСД) та ціла частина</p>
+        </div>
+      </div>
+
+      <!-- Controls & Input -->
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Fraction 1 -->
+        <div class="flex items-center gap-1 bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-700">
+          <div class="flex flex-col items-center">
+            <input id="num1" type="number" min="1" max="50" value="3" class="w-10 text-center bg-slate-900 border border-slate-700 rounded text-amber-300 font-bold text-xs focus:outline-none focus:border-amber-400 py-0.5">
+            <div class="w-full h-0.5 bg-slate-600 my-0.5"></div>
+            <input id="den1" type="number" min="1" max="50" value="4" class="w-10 text-center bg-slate-900 border border-slate-700 rounded text-cyan-300 font-bold text-xs focus:outline-none focus:border-cyan-400 py-0.5">
+          </div>
+        </div>
+
+        <span class="font-bold text-rose-400 text-sm">÷</span>
+
+        <!-- Fraction 2 -->
+        <div class="flex items-center gap-1 bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-700">
+          <div class="flex flex-col items-center">
+            <input id="num2" type="number" min="1" max="50" value="9" class="w-10 text-center bg-slate-900 border border-slate-700 rounded text-amber-300 font-bold text-xs focus:outline-none focus:border-amber-400 py-0.5">
+            <div class="w-full h-0.5 bg-slate-600 my-0.5"></div>
+            <input id="den2" type="number" min="1" max="50" value="8" class="w-10 text-center bg-slate-900 border border-slate-700 rounded text-cyan-300 font-bold text-xs focus:outline-none focus:border-cyan-400 py-0.5">
+          </div>
+        </div>
+
+        <!-- Presets Dropdown -->
+        <select id="presetSelect" onchange="loadPreset(this.value)" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded px-2 py-1.5 focus:outline-none hidden sm:block">
+          <option value="">-- Навчальні пресети --</option>
+          <option value="3/4:9/8">3/4 ÷ 9/8 (Перевертання + скорочення)</option>
+          <option value="5/6:1/3">5/6 ÷ 1/3 (Скорочення знаменника)</option>
+          <option value="7/2:3/4">7/2 ÷ 3/4 (Ціла частина в результаті)</option>
+          <option value="2/5:4/5">2/5 ÷ 4/5 (Однакові знаменники)</option>
+        </select>
+
+        <button onclick="initCalculation()" class="bg-rose-600 hover:bg-rose-500 text-white px-3 py-1.5 rounded-lg font-semibold text-xs transition flex items-center gap-1 shadow-lg shadow-rose-900/30">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Запуск
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN VIEWPORT GRID -->
+  <main class="max-w-7xl mx-auto w-full flex-1 grid grid-cols-1 lg:grid-cols-12 gap-2 my-2 min-h-0 overflow-hidden">
+
+    <!-- LEFT: Step Visualizer & Detailed Math Chain (8 Cols) -->
+    <section class="lg:col-span-8 bg-slate-900/60 border border-slate-800 rounded-xl p-3 flex flex-col justify-between shadow-xl relative min-h-0">
+      
+      <!-- Top Step Counter & Controls -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2 flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-800/50" id="stepBadge">
+            Крок 1 з 6
+          </span>
+          <span class="text-xs text-slate-300 font-medium" id="stepTitle">Аналіз правила ділення</span>
+        </div>
+
+        <div class="flex items-center gap-1">
+          <button onclick="prevStep()" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+          <button id="playBtn" onclick="togglePlay()" class="px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition flex items-center gap-1">
+            <span id="playIcon">▶</span> <span id="playText">Старт</span>
+          </button>
+          <button onclick="nextStep()" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+          
+          <select id="speedSelect" onchange="setSpeed(this.value)" class="ml-1 bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded px-1 py-1">
+            <option value="2500">0.5x</option>
+            <option value="1500" selected>1.0x</option>
+            <option value="800">1.5x</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Center Math Chain Display -->
+      <div class="my-auto py-3 flex flex-wrap items-center justify-center gap-2 sm:gap-3 mono text-base sm:text-xl bg-slate-950/50 rounded-xl border border-slate-800/80 p-3 flex-shrink-0 overflow-x-auto">
+        
+        <!-- Fraction 1 -->
+        <div class="flex flex-col items-center">
+          <span id="n1" class="font-bold text-amber-300 px-1.5 py-0.5 rounded transition-all">3</span>
+          <div class="w-full h-0.5 bg-slate-500 my-0.5 rounded"></div>
+          <span id="d1" class="font-bold text-cyan-300 px-1.5 py-0.5 rounded transition-all">4</span>
+        </div>
+
+        <!-- Op Sign Division -->
+        <span id="opDivSign" class="font-bold text-rose-400 text-base sm:text-xl">÷</span>
+
+        <!-- Fraction 2 (Initial) -->
+        <div id="stgFrac2Init" class="flex flex-col items-center">
+          <span id="n2" class="font-bold text-amber-300 px-1.5 py-0.5 rounded transition-all">9</span>
+          <div class="w-full h-0.5 bg-slate-500 my-0.5 rounded"></div>
+          <span id="d2" class="font-bold text-cyan-300 px-1.5 py-0.5 rounded transition-all">8</span>
+        </div>
+
+        <!-- Stage 2: Converted to Multiplication with Inverted Fraction -->
+        <div id="stgInverted" class="hidden flex items-center gap-2">
+          <span class="font-bold text-slate-500 text-base sm:text-xl">=</span>
+          
+          <!-- Fraction 1 Repeated -->
+          <div class="flex flex-col items-center">
+            <span id="n1_dup" class="font-bold text-amber-300 px-1.5 py-0.5 rounded">3</span>
+            <div class="w-full h-0.5 bg-slate-500 my-0.5 rounded"></div>
+            <span id="d1_dup" class="font-bold text-cyan-300 px-1.5 py-0.5 rounded">4</span>
+          </div>
+
+          <span class="font-bold text-emerald-400 text-base sm:text-xl font-extrabold">×</span>
+
+          <!-- Inverted Fraction 2 -->
+          <div id="invertedCard" class="flex flex-col items-center bg-emerald-950/60 p-1 rounded border border-emerald-500/60 transition-all">
+            <span id="invNum" class="font-bold text-cyan-300 px-1.5 py-0.5 rounded">8</span>
+            <div class="w-full h-0.5 bg-emerald-400 my-0.5 rounded"></div>
+            <span id="invDen" class="font-bold text-amber-300 px-1.5 py-0.5 rounded">9</span>
+          </div>
+        </div>
+
+        <!-- Stage 3: Joint Fraction -->
+        <div id="stgJoint" class="hidden flex items-center gap-2">
+          <span class="font-bold text-slate-500 text-base sm:text-xl">=</span>
+          <div class="flex flex-col items-center">
+            <span id="numMult" class="font-bold text-amber-300 px-1.5 py-0.5 rounded transition-all text-xs sm:text-base">3 × 8</span>
+            <div class="w-full h-0.5 bg-slate-500 my-0.5 rounded"></div>
+            <span id="denMult" class="font-bold text-cyan-300 px-1.5 py-0.5 rounded transition-all text-xs sm:text-base">4 × 9</span>
+          </div>
+        </div>
+
+        <!-- Stage 4: Multiplication Result (Raw Fraction) -->
+        <div id="stgRaw" class="hidden flex items-center gap-2">
+          <span class="font-bold text-slate-500 text-base sm:text-xl">=</span>
+          <div class="flex flex-col items-center">
+            <span id="rawNum" class="font-bold text-amber-400 px-1.5 py-0.5 rounded transition-all">24</span>
+            <div class="w-full h-0.5 bg-slate-500 my-0.5 rounded"></div>
+            <span id="rawDen" class="font-bold text-cyan-400 px-1.5 py-0.5 rounded transition-all">36</span>
+          </div>
+        </div>
+
+        <!-- Stage 5: Simplification Division Formula -->
+        <div id="stgSimplifyDiv" class="hidden flex items-center gap-2">
+          <span class="font-bold text-slate-500 text-base sm:text-xl">=</span>
+          <div class="flex flex-col items-center bg-indigo-950/60 p-1 rounded border border-indigo-700/50">
+            <span id="simpNumDiv" class="font-bold text-amber-300 px-1.5 py-0.5 rounded transition-all text-xs sm:text-base">24 ÷ 12</span>
+            <div class="w-full h-0.5 bg-indigo-400 my-0.5 rounded"></div>
+            <span id="simpDenDiv" class="font-bold text-cyan-300 px-1.5 py-0.5 rounded transition-all text-xs sm:text-base">36 ÷ 12</span>
+          </div>
+        </div>
+
+        <!-- Stage 6: Final Reduced / Mixed Result -->
+        <div id="stgReduced" class="hidden flex items-center gap-2">
+          <span class="font-bold text-slate-500 text-base sm:text-xl">=</span>
+          <span id="wholePart" class="hidden text-2xl sm:text-3xl font-extrabold text-yellow-400">1</span>
+          <div id="finalFractionBox" class="flex flex-col items-center">
+            <span id="finalNum" class="font-bold text-emerald-300 px-1.5 py-0.5 rounded transition-all">2</span>
+            <div class="w-full h-0.5 bg-slate-500 my-0.5 rounded"></div>
+            <span id="finalDen" class="font-bold text-emerald-400 px-1.5 py-0.5 rounded transition-all">3</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Step Explanation Card -->
+      <div class="bg-rose-950/30 border border-rose-800/40 rounded-lg p-2.5 flex-shrink-0">
+        <div class="flex items-start gap-2">
+          <div class="text-rose-400 mt-0.5 flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div>
+            <h4 class="text-[11px] font-bold text-rose-300 uppercase tracking-wider mb-0.5">Опис дії</h4>
+            <p id="stepDesc" class="text-xs sm:text-sm text-slate-200 leading-snug">Вхідні дані задано. Натисніть "Старт" або скористайтесь кнопками навігації.</p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- RIGHT: Graphical Inversion Scheme & Analytics (4 Cols) -->
+    <section class="lg:col-span-4 flex flex-col gap-2 min-h-0">
+      
+      <!-- Inversion Graphical Visualizer -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 shadow-xl flex flex-col items-center justify-between flex-1 min-h-0">
+        <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider self-start flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Візуалізація інверсії (Обернення)
+        </h3>
+
+        <!-- Interactive Inversion Graphic -->
+        <div class="w-full my-auto flex flex-col items-center justify-center p-2">
+          <div class="flex items-center gap-4 bg-slate-950 p-3 rounded-xl border border-slate-800 shadow-inner">
+            <!-- Normal Fraction -->
+            <div class="flex flex-col items-center">
+              <span class="text-[9px] text-slate-500 uppercase mb-1">Початковий 2-й дріб</span>
+              <div class="flex flex-col items-center mono text-lg font-bold">
+                <span id="visNum2" class="text-amber-300">9</span>
+                <div class="w-8 h-0.5 bg-slate-600 my-1"></div>
+                <span id="visDen2" class="text-cyan-300">8</span>
+              </div>
+            </div>
+
+            <div class="text-rose-400 font-bold text-xl flex flex-col items-center">
+              <span>➔</span>
+              <span class="text-[9px] text-slate-400">перевертаємо</span>
+            </div>
+
+            <!-- Inverted Fraction -->
+            <div class="flex flex-col items-center">
+              <span class="text-[9px] text-slate-500 uppercase mb-1">Обернений дріб</span>
+              <div id="visFlipBox" class="flex flex-col items-center mono text-lg font-bold bg-emerald-950/80 px-2 py-1 rounded border border-emerald-500/50">
+                <span id="visInvNum" class="text-cyan-300">8</span>
+                <div class="w-8 h-0.5 bg-emerald-400 my-1"></div>
+                <span id="visInvDen" class="text-amber-300">9</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p id="graphLegend" class="text-[10px] text-slate-400 text-center italic">
+          При діленні чисельник і знаменник другого дробу міняються місцями!
+        </p>
+      </div>
+
+      <!-- Analytics Card -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-2.5 shadow-xl flex-shrink-0">
+        <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          Параметри обчислення
+        </h3>
+
+        <div class="grid grid-cols-2 gap-2 text-xs mono">
+          <div class="bg-slate-950 p-1.5 rounded border border-slate-800">
+            <div class="text-[9px] text-slate-500 uppercase">Множення (Сирий)</div>
+            <div id="rawValDisplay" class="text-xs sm:text-sm font-bold text-amber-300">24/36</div>
+          </div>
+
+          <div class="bg-slate-950 p-1.5 rounded border border-slate-800">
+            <div class="text-[9px] text-slate-500 uppercase">НСД скорочення</div>
+            <div id="gcdVal" class="text-xs sm:text-sm font-bold text-emerald-300">12</div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    let currentStep = 0;
+    let totalSteps = 6;
+    let autoPlayTimer = null;
+    let playSpeed = 1500;
+
+    let calc = {
+      n1: 3, d1: 4,
+      n2: 9, d2: 8,
+      rawNum: 24,
+      rawDen: 36,
+      gcd: 12,
+      finalNum: 2,
+      finalDen: 3,
+      whole: 0,
+      remNum: 2
+    };
+
+    function getGCD(a, b) {
+      return b === 0 ? a : getGCD(b, a % b);
+    }
+
+    function loadPreset(val) {
+      if (!val) return;
+      let parts = val.split(':');
+      let f1 = parts[0].split('/');
+      let f2 = parts[1].split('/');
+
+      document.getElementById('num1').value = f1[0];
+      document.getElementById('den1').value = f1[1];
+      document.getElementById('num2').value = f2[0];
+      document.getElementById('den2').value = f2[1];
+
+      initCalculation();
+    }
+
+    function initCalculation() {
+      stopAutoPlay();
+      
+      let n1 = parseInt(document.getElementById('num1').value) || 1;
+      let d1 = parseInt(document.getElementById('den1').value) || 1;
+      let n2 = parseInt(document.getElementById('num2').value) || 1;
+      let d2 = parseInt(document.getElementById('den2').value) || 1;
+
+      n1 = Math.max(1, Math.min(50, n1));
+      d1 = Math.max(1, Math.min(50, d1));
+      n2 = Math.max(1, Math.min(50, n2));
+      d2 = Math.max(1, Math.min(50, d2));
+
+      // Division rule: (n1/d1) / (n2/d2) = (n1*d2) / (d1*n2)
+      let rawNum = n1 * d2;
+      let rawDen = d1 * n2;
+
+      let gcd = getGCD(rawNum, rawDen);
+      let finalNum = rawNum / gcd;
+      let finalDen = rawDen / gcd;
+
+      let whole = Math.floor(finalNum / finalDen);
+      let remNum = finalNum % finalDen;
+
+      calc = { n1, d1, n2, d2, rawNum, rawDen, gcd, finalNum, finalDen, whole, remNum };
+
+      // Set Elements Values
+      document.getElementById('n1').innerText = n1;
+      document.getElementById('d1').innerText = d1;
+      document.getElementById('n2').innerText = n2;
+      document.getElementById('d2').innerText = d2;
+
+      document.getElementById('n1_dup').innerText = n1;
+      document.getElementById('d1_dup').innerText = d1;
+
+      document.getElementById('invNum').innerText = d2;
+      document.getElementById('invDen').innerText = n2;
+
+      document.getElementById('numMult').innerText = `${n1} × ${d2}`;
+      document.getElementById('denMult').innerText = `${d1} × ${n2}`;
+
+      document.getElementById('rawNum').innerText = rawNum;
+      document.getElementById('rawDen').innerText = rawDen;
+
+      document.getElementById('simpNumDiv').innerText = `${rawNum} ÷ ${gcd}`;
+      document.getElementById('simpDenDiv').innerText = `${rawDen} ÷ ${gcd}`;
+
+      document.getElementById('finalNum').innerText = finalNum;
+      document.getElementById('finalDen').innerText = finalDen;
+
+      document.getElementById('wholePart').innerText = whole;
+
+      document.getElementById('visNum2').innerText = n2;
+      document.getElementById('visDen2').innerText = d2;
+      document.getElementById('visInvNum').innerText = d2;
+      document.getElementById('visInvDen').innerText = n2;
+
+      document.getElementById('rawValDisplay').innerText = `${rawNum}/${rawDen}`;
+      document.getElementById('gcdVal').innerText = gcd;
+
+      currentStep = 0;
+      renderStep();
+    }
+
+    function renderStep() {
+      const steps = [
+        {
+          title: "1. Правило ділення дробів",
+          desc: `Щоб поділити дріб <b>${calc.n1}/${calc.d1}</b> на <b>${calc.n2}/${calc.d2}</b>, потрібно перший дріб <b>залишити без змін</b>, дію ділення `÷` замінити на множення `×`, а другий дріб <b>перевернути</b> (взяти обернений: <b>${calc.d2}/${calc.n2}</b>).`
+        },
+        {
+          title: "2. Перетворення у множення",
+          desc: `Записуємо вираз у вигляді множення: <b>${calc.n1}/${calc.d1} × ${calc.d2}/${calc.n2}</b>. Другий дріб перевернувся!`
+        },
+        {
+          title: "3. Запис під спільною рискою",
+          desc: `Записуємо чисельники й знаменники під спільною рискою: у чисельнику <b>${calc.n1} × ${calc.d2}</b>, у знаменнику <b>${calc.d1} × ${calc.n2}</b>.`
+        },
+        {
+          title: "4. Результат множення (Дія 1)",
+          desc: `Обчислюємо добутки:<br>• Чисельник: <b>${calc.n1} × ${calc.d2} = ${calc.rawNum}</b><br>• Знаменник: <b>${calc.d1} × ${calc.n2} = ${calc.rawDen}</b><br>Отримали дріб: <b>${calc.rawNum}/${calc.rawDen}</b>.`
+        },
+        {
+          title: "5. Покрокове скорочення (Дія 2)",
+          desc: calc.gcd > 1
+            ? `Шукаємо НСД для <b>${calc.rawNum}</b> і <b>${calc.rawDen}</b>. НСД = <b>${calc.gcd}</b>.<br>Ділимо чисельник і знаменник на <b>${calc.gcd}</b>: (<b>${calc.rawNum} ÷ ${calc.gcd}</b>) / (<b>${calc.rawDen} ÷ ${calc.gcd}</b>) = <b>${calc.finalNum}/${calc.finalDen}</b>.`
+            : `Дріб <b>${calc.rawNum}/${calc.rawDen}</b> є несокротним (НСД = 1).`
+        },
+        {
+          title: "6. Виділення цілої частини (Дія 3)",
+          desc: calc.finalNum >= calc.finalDen && calc.finalDen !== 1
+            ? `Чисельник <b>${calc.finalNum} ≥ ${calc.finalDen}</b> (неправильний дріб). Ділимо: <b>${calc.finalNum} ÷ ${calc.finalDen} = ${calc.whole}</b> цілих і залишок <b>${calc.remNum}</b>. Остаточний результат: <b>${calc.whole} ${calc.remNum}/${calc.finalDen}</b>.`
+            : calc.finalDen === 1
+              ? `Знаменник дорівнює 1. Результат — ціле число: <b>${calc.finalNum}</b>.`
+              : `Дріб <b>${calc.finalNum}/${calc.finalDen}</b> правильний. Обчислення успішно завершено!`
+        }
+      ];
+
+      document.getElementById('stepBadge').innerText = `Крок ${currentStep + 1} з 6`;
+      document.getElementById('stepTitle').innerText = steps[currentStep].title;
+      document.getElementById('stepDesc').innerHTML = steps[currentStep].desc;
+
+      // Reset visibilities
+      document.getElementById('stgInverted').classList.add('hidden');
+      document.getElementById('stgJoint').classList.add('hidden');
+      document.getElementById('stgRaw').classList.add('hidden');
+      document.getElementById('stgSimplifyDiv').classList.add('hidden');
+      document.getElementById('stgReduced').classList.add('hidden');
+      document.getElementById('wholePart').classList.add('hidden');
+      document.getElementById('finalFractionBox').classList.remove('hidden');
+
+      // Step visual state management
+      if (currentStep === 0) {
+        document.getElementById('n2').className = "font-bold text-amber-300 bg-amber-950 border border-amber-500 px-1.5 py-0.5 rounded animate-pulse";
+        document.getElementById('d2').className = "font-bold text-cyan-300 bg-cyan-950 border border-cyan-500 px-1.5 py-0.5 rounded animate-pulse";
+      } else if (currentStep === 1) {
+        document.getElementById('stgInverted').classList.remove('hidden');
+        document.getElementById('visFlipBox').classList.add('animate-flip');
+        setTimeout(() => document.getElementById('visFlipBox').classList.remove('animate-flip'), 800);
+      } else if (currentStep === 2) {
+        document.getElementById('stgInverted').classList.remove('hidden');
+        document.getElementById('stgJoint').classList.remove('hidden');
+      } else if (currentStep === 3) {
+        document.getElementById('stgInverted').classList.remove('hidden');
+        document.getElementById('stgJoint').classList.remove('hidden');
+        document.getElementById('stgRaw').classList.remove('hidden');
+      } else if (currentStep === 4) {
+        document.getElementById('stgInverted').classList.remove('hidden');
+        document.getElementById('stgJoint').classList.remove('hidden');
+        document.getElementById('stgRaw').classList.remove('hidden');
+        if (calc.gcd > 1) {
+          document.getElementById('stgSimplifyDiv').classList.remove('hidden');
+        }
+      } else if (currentStep === 5) {
+        document.getElementById('stgInverted').classList.remove('hidden');
+        document.getElementById('stgJoint').classList.remove('hidden');
+        document.getElementById('stgRaw').classList.remove('hidden');
+        if (calc.gcd > 1) {
+          document.getElementById('stgSimplifyDiv').classList.remove('hidden');
+        }
+        document.getElementById('stgReduced').classList.remove('hidden');
+
+        if (calc.whole > 0) {
+          document.getElementById('wholePart').classList.remove('hidden');
+          if (calc.remNum === 0) {
+            document.getElementById('finalFractionBox').classList.add('hidden');
+          } else {
+            document.getElementById('finalNum').innerText = calc.remNum;
+            document.getElementById('finalDen').innerText = calc.finalDen;
+          }
+        }
+      }
+    }
+
+    function nextStep() {
+      if (currentStep < totalSteps - 1) {
+        currentStep++;
+        renderStep();
+      } else {
+        stopAutoPlay();
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        renderStep();
+      }
+    }
+
+    function togglePlay() {
+      if (autoPlayTimer) {
+        stopAutoPlay();
+      } else {
+        startAutoPlay();
+      }
+    }
+
+    function startAutoPlay() {
+      if (currentStep >= totalSteps - 1) currentStep = 0;
+      renderStep();
+      document.getElementById('playIcon').innerText = '⏸';
+      document.getElementById('playText').innerText = 'Старт';
+      autoPlayTimer = setInterval(() => {
+        if (currentStep < totalSteps - 1) {
+          nextStep();
+        } else {
+          stopAutoPlay();
+        }
+      }, playSpeed);
+    }
+
+    function stopAutoPlay() {
+      if (autoPlayTimer) {
+        clearInterval(autoPlayTimer);
+        autoPlayTimer = null;
+      }
+      document.getElementById('playIcon').innerText = '▶';
+      document.getElementById('playText').innerText = 'Старт';
+    }
+
+    function setSpeed(val) {
+      playSpeed = parseInt(val);
+      if (autoPlayTimer) {
+        stopAutoPlay();
+        startAutoPlay();
+      }
+    }
+
+    window.onload = () => {
+      initCalculation();
+    };
+  </script>
+</body>
+</html>
