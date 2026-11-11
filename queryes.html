@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Навчальний віджет — Google Sheets QUERY</title>
+<style>
+  :root {
+    --ql-ink:#17243b; --ql-muted:#66758b; --ql-blue:#315ee8; --ql-blue-soft:#edf2ff;
+    --ql-teal:#0c8c83; --ql-teal-soft:#e8f7f5; --ql-gold:#f3b43b; --ql-gold-soft:#fff6df;
+    --ql-line:#e3e9f2; --ql-paper:#ffffff; --ql-bg:#f4f7fb; --ql-green:#17764b;
+    --ql-shadow:0 12px 34px rgba(25,45,80,.08);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ql-bg);color:var(--ql-ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+  .ql-widget{max-width:1180px;margin:0 auto;padding:18px}
+  .ql-shell{background:var(--ql-paper);border:1px solid var(--ql-line);border-radius:22px;overflow:hidden;box-shadow:var(--ql-shadow)}
+  .ql-hero{padding:25px 28px 21px;background:linear-gradient(120deg,#172e62 0%,#2856bc 62%,#287f91 100%);color:#fff;position:relative;overflow:hidden}
+  .ql-hero:after{content:"{ }";position:absolute;right:28px;top:6px;font:800 94px/1 ui-monospace,monospace;color:rgba(255,255,255,.09);letter-spacing:-13px;pointer-events:none}
+  .ql-kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:#c9d8ff;margin-bottom:7px}
+  .ql-hero h1{margin:0 0 8px;font-size:clamp(25px,4vw,36px);line-height:1.1;letter-spacing:-.03em;max-width:780px}
+  .ql-hero p{margin:0;max-width:760px;color:#e1eaff;font-size:14px;line-height:1.55}
+  .ql-hero-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
+  .ql-hero-tag{border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.1);border-radius:999px;padding:5px 10px;font-size:11px;font-weight:700;color:#f4f7ff}
+  .ql-layout{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:690px}
+  .ql-sidebar{padding:19px 14px;border-right:1px solid var(--ql-line);background:#fbfcfe}
+  .ql-side-title{font-size:10px;font-weight:850;letter-spacing:.12em;text-transform:uppercase;color:#8190a5;padding:4px 10px 11px}
+  .ql-step-list{display:flex;flex-direction:column;gap:4px}
+  .ql-step-link{appearance:none;border:0;background:transparent;display:flex;align-items:center;gap:10px;text-align:left;width:100%;padding:9px 10px;border-radius:11px;color:#53627a;cursor:pointer;font:inherit;font-size:12px;line-height:1.25;transition:background .15s,color .15s}
+  .ql-step-link:hover{background:#f0f4fa;color:var(--ql-ink)}
+  .ql-step-link[aria-current="step"]{background:var(--ql-blue-soft);color:#2046bd;font-weight:800}
+  .ql-step-num{flex:0 0 25px;width:25px;height:25px;display:grid;place-items:center;border-radius:8px;background:#edf1f6;color:#66758b;font-size:11px;font-weight:850}
+  .ql-step-link[aria-current="step"] .ql-step-num{background:var(--ql-blue);color:white}
+  .ql-step-link.is-done .ql-step-num{background:var(--ql-teal-soft);color:var(--ql-teal)}
+  .ql-side-note{margin:18px 5px 0;padding:12px;border:1px solid #dce8f2;border-radius:12px;background:#f4f9fc;font-size:11px;line-height:1.5;color:#52667b}
+  .ql-main{padding:22px 25px 24px;min-width:0}
+  .ql-progress-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:9px;color:var(--ql-muted);font-size:11px;font-weight:700}
+  .ql-progress{height:6px;border-radius:20px;background:#edf1f6;overflow:hidden;margin-bottom:23px}
+  .ql-progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--ql-blue),#24a69a);border-radius:20px;transition:width .25s}
+  .ql-lesson-kicker{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:850;color:var(--ql-teal);margin-bottom:8px}
+  .ql-lesson h2{font-size:clamp(22px,3vw,30px);line-height:1.16;letter-spacing:-.025em;margin:0 0 10px}
+  .ql-lead{font-size:14px;line-height:1.65;color:#516178;margin:0 0 18px;max-width:830px}
+  .ql-callout{border-radius:14px;padding:14px 16px;margin:14px 0;border:1px solid #dce7fa;background:#f4f7ff;color:#33486d;font-size:13px;line-height:1.6}
+  .ql-callout strong{color:#203e95}
+  .ql-callout.teal{background:var(--ql-teal-soft);border-color:#ccece7;color:#285b58}
+  .ql-callout.gold{background:var(--ql-gold-soft);border-color:#f5e4b8;color:#6d5424}
+  .ql-code{position:relative;margin:13px 0 17px;border-radius:14px;background:#142238;color:#f4f7fb;padding:15px 16px;overflow:auto;border:1px solid #223653}
+  .ql-code pre{margin:0;white-space:pre-wrap;word-break:break-word;font:600 13px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace}
+  .ql-code .ql-copy{position:absolute;right:8px;top:8px;border:1px solid #52647f;background:#263a56;color:#f5f8ff;border-radius:8px;padding:5px 8px;font-size:10px;font-weight:800;cursor:pointer}
+  .ql-code .ql-copy:hover{background:#365174}
+  .ql-token-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:15px 0}
+  .ql-token-card{border:1px solid var(--ql-line);border-radius:13px;padding:13px;background:#fff;min-width:0}
+  .ql-token-card .token{display:inline-block;font:800 12px ui-monospace,monospace;color:#2148c1;background:#eef2ff;border-radius:7px;padding:4px 7px;margin-bottom:7px}
+  .ql-token-card h3{font-size:13px;margin:0 0 5px}
+  .ql-token-card p{font-size:12px;line-height:1.55;color:#617087;margin:0}
+  .ql-inline-table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border:1px solid var(--ql-line);border-radius:12px;margin:12px 0 17px;font-size:12px}
+  .ql-inline-table th{background:#edf2fa;color:#40516d;text-align:left;font-weight:850}
+  .ql-inline-table th,.ql-inline-table td{padding:9px 11px;border-bottom:1px solid var(--ql-line);white-space:nowrap}
+  .ql-inline-table tr:last-child td{border-bottom:0}
+  .ql-inline-table td{color:#39485e}
+  .ql-inline-table .ql-head-letter{display:block;font:800 10px ui-monospace,monospace;color:#8291a5;margin-bottom:3px}
+  .ql-mini-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:15px 0}
+  .ql-mini{padding:13px;border:1px solid var(--ql-line);border-radius:12px;background:#fbfcff}
+  .ql-mini b{display:block;font-size:12px;margin-bottom:5px;color:#253a61}
+  .ql-mini span{font-size:11px;line-height:1.45;color:#62728a;display:block}
+  .ql-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:20px;margin-top:22px;border-top:1px solid var(--ql-line)}
+  .ql-btn{border:1px solid var(--ql-line);background:#fff;color:#33425a;padding:10px 15px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer}
+  .ql-btn:hover{background:#f5f7fb}
+  .ql-btn.primary{background:var(--ql-blue);border-color:var(--ql-blue);color:#fff}
+  .ql-btn.primary:hover{background:#244bd0}
+  .ql-btn:disabled{opacity:.4;cursor:not-allowed}
+  .ql-lab{margin-top:24px;border:1px solid #dce5f0;border-radius:17px;overflow:hidden;background:#fbfcff}
+  .ql-lab-head{padding:15px 17px;background:#edf3ff;border-bottom:1px solid #dce5f0}
+  .ql-lab-head h3{margin:0 0 4px;font-size:16px;color:#233e80}
+  .ql-lab-head p{margin:0;color:#627391;font-size:11px;line-height:1.5}
+  .ql-lab-body{padding:16px}
+  .ql-controls{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:12px}
+  .ql-control{min-width:0}
+  .ql-control label,.ql-control .ql-control-title{display:block;margin:0 0 6px;color:#566780;font-size:10px;font-weight:850;letter-spacing:.05em;text-transform:uppercase}
+  .ql-control select,.ql-control input{width:100%;border:1px solid #d7dfeb;border-radius:9px;padding:9px 10px;background:#fff;color:#293951;font:600 12px inherit;font-size:12px;min-width:0}
+  .ql-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .ql-check{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e0e6ef;padding:7px 8px;border-radius:8px;font-size:11px;color:#40516c}
+  .ql-check input{width:auto;margin:0;accent-color:var(--ql-blue)}
+  .ql-lab-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px}
+  .ql-formula{margin-top:14px;border-radius:11px;background:#142238;color:#eaf1ff;padding:12px 13px;overflow-wrap:anywhere;font:600 12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}
+  .ql-formula small{display:block;color:#9fb2d1;font:700 9px/1.4 ui-sans-serif,system-ui;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+  .ql-result-wrap{margin-top:13px;border:1px solid var(--ql-line);border-radius:11px;overflow:auto;background:#fff}
+  .ql-result-title{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 12px;background:#f5f8fc;border-bottom:1px solid var(--ql-line);font-size:11px;font-weight:850;color:#50617a}
+  .ql-result-title span:last-child{font-weight:600;color:#8996a8}
+  .ql-result{width:100%;border-collapse:collapse;font-size:11px}
+  .ql-result th{background:#f8faff;color:#314b7c;text-align:left;font-weight:850}
+  .ql-result th,.ql-result td{padding:9px 11px;border-bottom:1px solid #edf0f5;white-space:nowrap}
+  .ql-result tr:last-child td{border-bottom:0}
+  .ql-result td{color:#46556b}
+  .ql-empty{padding:18px;text-align:center;color:#78869a;font-size:12px}
+  .ql-quiz{border:1px solid #d9e5f6;background:#f8faff;border-radius:14px;padding:15px;margin-top:17px}
+  .ql-quiz h3{font-size:14px;margin:0 0 8px;color:#27427d}
+  .ql-quiz p{font-size:12px;line-height:1.5;color:#586983;margin:0 0 10px}
+  .ql-quiz label{display:flex;align-items:flex-start;gap:8px;padding:8px 9px;margin:5px 0;border-radius:8px;background:#fff;border:1px solid #e2e8f2;font-size:11px;line-height:1.45;color:#3f4f67;cursor:pointer}
+  .ql-quiz input{margin-top:2px;accent-color:var(--ql-blue)}
+  .ql-quiz-feedback{display:none;margin-top:10px;padding:9px 11px;border-radius:9px;font-size:11px;line-height:1.5}
+  .ql-quiz-feedback.good{display:block;background:#eaf7f0;color:#216444;border:1px solid #ccebd8}
+  .ql-quiz-feedback.bad{display:block;background:#fff3e9;color:#835127;border:1px solid #f4dfc8}
+  .ql-footnote{font-size:10px;color:#8793a5;line-height:1.5;margin-top:14px}
+  .ql-screen-reader{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  @media(max-width:850px){.ql-layout{grid-template-columns:210px minmax(0,1fr)}.ql-main{padding:19px}.ql-controls{grid-template-columns:1fr 1fr}.ql-controls .ql-control:first-child{grid-column:1/-1}}
+  @media(max-width:640px){.ql-widget{padding:7px}.ql-shell{border-radius:15px}.ql-hero{padding:20px 18px}.ql-hero:after{font-size:66px;right:15px}.ql-layout{display:block}.ql-sidebar{border-right:0;border-bottom:1px solid var(--ql-line);padding:10px 10px 12px}.ql-side-title,.ql-side-note{display:none}.ql-step-list{display:flex;flex-direction:row;overflow:auto;padding-bottom:3px;gap:5px}.ql-step-link{width:auto;flex:0 0 auto;padding:7px 8px}.ql-step-link .ql-step-label{display:none}.ql-step-num{flex-basis:27px;width:27px;height:27px}.ql-main{padding:17px 14px}.ql-token-grid{grid-template-columns:1fr}.ql-mini-steps{grid-template-columns:1fr}.ql-controls,.ql-lab-row{grid-template-columns:1fr}.ql-controls .ql-control:first-child{grid-column:auto}.ql-hero p{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="ql-widget">
+  <div class="ql-shell">
+    <header class="ql-hero">
+      <div class="ql-kicker">Мінікурс · Google Таблиці</div>
+      <h1>Навчися ставити запит до таблиці</h1>
+      <p>Розберімо формулу QUERY по частинах: звідки брати дані, які стовпці показати, як відфільтрувати рядки та впорядкувати результат.</p>
+      <div class="ql-hero-tags"><span class="ql-hero-tag">11 коротких кроків</span><span class="ql-hero-tag">Приклади з таблицею товарів</span><span class="ql-hero-tag">Можна потренуватися</span></div>
+    </header>
+    <div class="ql-layout">
+      <aside class="ql-sidebar" aria-label="Навігація уроку">
+        <div class="ql-side-title">Маршрут навчання</div>
+        <nav class="ql-step-list" id="ql-step-list"></nav>
+        <div class="ql-side-note"><b>Головна думка</b><br>Спочатку вказуємо, де лежать дані. Потім формулюємо запит: які стовпці показати, які рядки залишити та як їх упорядкувати.</div>
+      </aside>
+      <main class="ql-main">
+        <div class="ql-progress-head"><span id="ql-step-counter">Крок 1 із 11</span><span id="ql-progress-percent">9%</span></div>
+        <div class="ql-progress"><div class="ql-progress-fill" id="ql-progress-fill"></div></div>
+        <article class="ql-lesson" id="ql-lesson" aria-live="polite"></article>
+        <div class="ql-nav">
+          <button class="ql-btn" id="ql-prev" type="button">← Назад</button>
+          <button class="ql-btn primary" id="ql-next" type="button">Наступний крок →</button>
+        </div>
+        <section class="ql-lab" aria-label="Інтерактивний конструктор запиту">
+          <div class="ql-lab-head">
+            <h3>Спробуй сам: конструктор QUERY</h3>
+            <p>Познач стовпці, задай умову та сортування. Нижче побачиш, як зміниться запит і результат.</p>
+          </div>
+          <div class="ql-lab-body">
+            <div class="ql-controls">
+              <div class="ql-control">
+                <span class="ql-control-title">1. Які стовпці показати?</span>
+                <div class="ql-checks" id="ql-column-checks">
+                  <label class="ql-check"><input type="checkbox" value="0" checked> Назва (A)</label>
+                  <label class="ql-check"><input type="checkbox" value="1"> Категорія (B)</label>
+                  <label class="ql-check"><input type="checkbox" value="2" checked> Ціна (C)</label>
+                  <label class="ql-check"><input type="checkbox" value="3"> Кількість (D)</label>
+                  <label class="ql-check"><input type="checkbox" value="4"> Бренд (E)</label>
+                </div>
+              </div>
+              <div class="ql-control">
+                <label for="ql-filter-field">2. Умова WHERE</label>
+                <select id="ql-filter-field">
+                  <option value="none">Не фільтрувати</option>
+                  <option value="2" selected>Ціна (C)</option>
+                  <option value="3">Кількість (D)</option>
+                  <option value="1">Категорія (B)</option>
+                </select>
+                <div style="display:grid;grid-template-columns:75px 1fr;gap:6px;margin-top:7px">
+                  <select id="ql-filter-op" aria-label="Оператор умови"><option value=">">&gt;</option><option value="<">&lt;</option><option value="=">=</option><option value=">=">&gt;=</option><option value="<=">&lt;=</option><option value="<>">&lt;&gt;</option></select>
+                  <input id="ql-filter-value" type="number" value="1000" aria-label="Значення умови">
+                </div>
+              </div>
+              <div class="ql-control">
+                <label for="ql-sort-field">3. ORDER BY — сортування</label>
+                <select id="ql-sort-field">
+                  <option value="none">Без сортування</option>
+                  <option value="0">Назва (A)</option>
+                  <option value="2" selected>Ціна (C)</option>
+                  <option value="3">Кількість (D)</option>
+                </select>
+                <select id="ql-sort-direction" style="margin-top:7px"><option value="desc" selected>DESC — від більшого до меншого</option><option value="asc">ASC — від меншого до більшого</option></select>
+              </div>
+            </div>
+            <div class="ql-formula" id="ql-formula"><small>Формула, яку ми склали</small><span id="ql-formula-text"></span></div>
+            <div class="ql-result-wrap">
+              <div class="ql-result-title"><span>Результат запиту</span><span id="ql-result-count"></span></div>
+              <div id="ql-result-table"></div>
+            </div>
+            <div class="ql-footnote">Це навчальна демонстрація на прикладі товарів. Вона показує логіку запиту, але не підключається до вашої Google Таблиці й не виконує формулу в самому файлі.</div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</div>
+<script>
+(() => {
+  const root = document.querySelector('.ql-widget');
+  if (!root) return;
+  const headers = ['Назва','Категорія','Ціна','Кількість','Бренд'];
+  const letters = ['A','B','C','D','E'];
+  const rows = [
+    ['Навушники','Аксесуар',1800,12,'Sony'],
+    ['Миша','Аксесуар',650,25,'Logitech'],
+    ['Клавіатура','Аксесуар',1200,14,'Logitech'],
+    ['Геймпад','Контролер',2100,8,'Sony'],
+    ['Монітор','Екран',5200,5,'Samsung'],
+    ['Ігрова приставка','Консоль',14500,3,'Sony']
+  ];
+  const steps = [
+    {
+      title:'Що робить QUERY?', kicker:'Крок 1 · Ідея',
+      lead:'Уяви, що в таблиці багато рядків. Тобі потрібно швидко знайти потрібні записи, показати лише окремі стовпці або впорядкувати результат. QUERY дозволяє поставити таблиці таке запитання.',
+      body:`<div class="ql-callout"><strong>QUERY — це функція Google Таблиць.</strong> Вона читає вибраний діапазон даних, виконує текстовий запит і виводить окрему таблицю з результатом. Початкові дані при цьому не змінюються.</div>
+      <div class="ql-mini-steps"><div class="ql-mini"><b>1. Джерело</b><span>Звідки взяти дані?</span></div><div class="ql-mini"><b>2. Запит</b><span>Що саме потрібно знайти?</span></div><div class="ql-mini"><b>3. Результат</b><span>Окрема таблиця з відповіддю.</span></div></div>
+      <div class="ql-code"><pre>=QUERY(A1:E7; "select A, C where C &gt; 1000 order by C desc"; 1)</pre></div>
+      <div class="ql-callout gold"><strong>Важливо:</strong> QUERY схожа на SQL, але це не повноцінна SQL-система. У Google Таблицях використовується мова запитів Google Visualization API. Для початку нам достатньо трьох команд: SELECT, WHERE та ORDER BY.</div>`
+    },
+    {
+      title:'Будова функції: три параметри', kicker:'Крок 2 · Синтаксис',
+      lead:'У функції QUERY є три частини. Перші дві обов’язкові, третя допомагає правильно визначити рядки заголовків.',
+      body:`<div class="ql-code"><pre>=QUERY( data ; query ; headers )</pre></div>
+      <div class="ql-token-grid">
+        <div class="ql-token-card"><span class="token">QUERY</span><h3>Назва функції</h3><p>Повідомляє таблицям: «виконай запит до даних».</p></div>
+        <div class="ql-token-card"><span class="token">( )</span><h3>Дужки</h3><p>Усередині дужок записують параметри функції.</p></div>
+        <div class="ql-token-card"><span class="token">data</span><h3>Перший параметр</h3><p>Діапазон або іменований діапазон, у якому шукаємо.</p></div>
+        <div class="ql-token-card"><span class="token">query</span><h3>Другий параметр</h3><p>Текст запиту: які стовпці вибрати, які рядки залишити, як сортувати.</p></div>
+        <div class="ql-token-card"><span class="token">headers</span><h3>Третій параметр</h3><p>Кількість рядків заголовків на початку джерела: зазвичай 1 або 0.</p></div>
+        <div class="ql-token-card"><span class="token">;</span><h3>Роздільник</h3><p>Роздільник залежить від локалі файлу: в українській локалі зазвичай ставлять крапку з комою, в іншій локалі може бути кома.</p></div>
+      </div>
+      <div class="ql-callout teal"><strong>Не плутай роздільники.</strong> Крапка з комою розділяє параметри функції. Кома всередині тексту запиту розділяє назви стовпців: <code>select A, C</code>. Слова-команди SELECT, WHERE та ORDER BY можна писати великими або малими літерами.</div>`
+    },
+    {
+      title:'Параметр data — де лежать дані', kicker:'Крок 3 · Джерело',
+      lead:'Перший параметр — це адреса діапазону клітинок, у якому функція має шукати інформацію. У нашому прикладі таблиця займає клітинки A1:E7.',
+      body:`<table class="ql-inline-table"><thead><tr><th><span class="ql-head-letter">A</span>Назва</th><th><span class="ql-head-letter">B</span>Категорія</th><th><span class="ql-head-letter">C</span>Ціна</th><th><span class="ql-head-letter">D</span>Кількість</th><th><span class="ql-head-letter">E</span>Бренд</th></tr></thead><tbody><tr><td>Навушники</td><td>Аксесуар</td><td>1800</td><td>12</td><td>Sony</td></tr><tr><td>Миша</td><td>Аксесуар</td><td>650</td><td>25</td><td>Logitech</td></tr><tr><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td></tr></tbody></table>
+      <div class="ql-code"><pre>=QUERY(A1:E7; "select A, C"; 1)</pre></div>
+      <div class="ql-token-grid"><div class="ql-token-card"><span class="token">A1:E7</span><h3>Весь прямокутник</h3><p>Від першої клітинки A1 до останньої E7. Двокрапка означає діапазон.</p></div><div class="ql-token-card"><span class="token">A1:E</span><h3>Від першого рядка донизу</h3><p>Зручний варіант, коли кількість записів буде збільшуватися.</p></div></div>
+      <div class="ql-callout gold"><strong>Пам’ятай:</strong> якщо в діапазон включено рядок із назвами стовпців, третій параметр зазвичай дорівнює 1. Якщо дані починаються відразу з першого рядка без заголовків — 0.</div>`
+    },
+    {
+      title:'Іменований діапазон замість адреси', kicker:'Крок 4 · Зручне ім’я',
+      lead:'Діапазону клітинок можна надати власне ім’я. Тоді замість A1:E7 у формулі пишемо зрозуміле слово, наприклад Каталог.',
+      body:`<div class="ql-mini-steps"><div class="ql-mini"><b>1. Виділи клітинки</b><span>Наприклад, A1:E7 — усю таблицю разом із заголовками.</span></div><div class="ql-mini"><b>2. Відкрий «Дані»</b><span>Обери «Іменовані діапазони».</span></div><div class="ql-mini"><b>3. Дай назву</b><span>Напиши Каталог і збережи.</span></div></div>
+      <div class="ql-code"><pre>=QUERY(Каталог; "select Col1, Col3"; 1)</pre></div>
+      <div class="ql-callout teal"><strong>Що змінилося?</strong> Тільки перший параметр. Замість адреси клітинок тепер використовується ім’я цього діапазону. Це все ще діапазон, а не окрема база даних.</div>
+      <div class="ql-callout"><strong>Навіщо це потрібно?</strong> Формула стає читабельнішою. Якщо джерело перемістили або змінили його розмір, працювати з іменованим діапазоном часто зручніше, ніж виправляти багато адрес у формулах.</div>
+      <p style="font-size:12px;color:#62728a;line-height:1.6">У запиті <code>Col1</code> означає перший стовпець вибраного джерела, а <code>Col3</code> — третій. Для звичайного діапазону також можна використовувати літери стовпців аркуша, наприклад A та C.</p>`
+    },
+    {
+      title:'Таблиця — структурований діапазон', kicker:'Крок 5 · Режим таблиці',
+      lead:'У Google Таблицях діапазон можна перетворити на об’єкт «Таблиця». Він має власне ім’я, назви стовпців і додаткові можливості для роботи з даними.',
+      body:`<div class="ql-callout"><strong>Як створити:</strong> виділи дані та обери Формат → Перетворити на таблицю. Після створення можна перейменувати таблицю, наприклад на Goods. У формулі заміни Goods на фактичну назву своєї таблиці.</div>
+      <div class="ql-token-grid"><div class="ql-token-card"><span class="token">A1:E7</span><h3>Звичайний діапазон</h3><p>Адреса конкретних клітинок. Нові рядки за межами адреси не завжди потраплять у формулу автоматично.</p></div><div class="ql-token-card"><span class="token">Goods</span><h3>Таблиця</h3><p>Іменована структура. Посилання на неї може автоматично враховувати додані або вилучені рядки.</p></div></div>
+      <div class="ql-code"><pre>=QUERY(Goods; "select Col1, Col3 where Col3 &gt; 1000 order by Col3 desc"; 0)</pre></div>
+      <div class="ql-callout teal"><strong>Зв’язок із діапазоном:</strong> таблиця не є окремою SQL-базою. Це структурований об’єкт Google Таблиць, побудований на клітинках. У формулі її ім’я може виступати посиланням на дані; посилання <code>Goods</code> охоплює дані таблиці без рядка заголовків, тому в цьому прикладі вказано 0.</div>
+      <div class="ql-callout gold"><strong>Не плутай назви:</strong> у самій таблиці стовпець може називатися «Ціна», але в тексті QUERY ми звертаємося до нього за ідентифікатором — наприклад, <code>Col3</code> (третій стовпець джерела), а не за написом «Ціна».</div>`
+    },
+    {
+      title:'Параметр query — текст запиту', kicker:'Крок 6 · Мова запиту',
+      lead:'Другий параметр повідомляє, що саме потрібно зробити з даними. Це текст, тому весь запит береться в лапки. Усередині нього є спеціальні слова-команди.',
+      body:`<div class="ql-code"><pre>=QUERY(A1:E7; "select A, C where C &gt; 1000 order by C desc"; 1)</pre></div>
+      <div class="ql-token-grid"><div class="ql-token-card"><span class="token">" ... "</span><h3>Подвійні лапки</h3><p>Обмежують увесь текст запиту, щоб таблиці сприймали його як текстовий параметр.</p></div><div class="ql-token-card"><span class="token">select</span><h3>Що показати?</h3><p>Обирає стовпці для результату.</p></div><div class="ql-token-card"><span class="token">where</span><h3>Які рядки залишити?</h3><p>Відбирає рядки, що відповідають умові.</p></div><div class="ql-token-card"><span class="token">order by</span><h3>У якому порядку?</h3><p>Упорядковує знайдені рядки за вибраним стовпцем.</p></div></div>
+      <div class="ql-callout gold"><strong>Лапки всередині лапок:</strong> якщо шукаємо текстове значення, наприклад категорію Аксесуар, пишемо подвійні лапки навколо всього запиту й одинарні навколо слова: <code>"where B = 'Аксесуар'"</code>.</div>`
+    },
+    {
+      title:'SELECT — вибираємо стовпці', kicker:'Крок 7 · Перша команда',
+      lead:'SELECT відповідає на запитання: які саме стовпці потрібно побачити у відповіді? Після слова перелічуємо ідентифікатори стовпців через кому.',
+      body:`<div class="ql-code"><pre>select A, C</pre></div>
+      <div class="ql-mini-steps"><div class="ql-mini"><b>select</b><span>Команда вибору стовпців.</span></div><div class="ql-mini"><b>A</b><span>Показати перший стовпець — Назва.</span></div><div class="ql-mini"><b>, C</b><span>Додатково показати третій стовпець — Ціна.</span></div></div>
+      <div class="ql-code"><pre>=QUERY(A1:E7; "select A, C"; 1)</pre></div>
+      <div class="ql-callout"><strong>А якщо потрібні всі стовпці?</strong> Напиши <code>select *</code>. Зірочка означає «усі стовпці».</div>
+      <div class="ql-callout gold"><strong>Типова помилка:</strong> не можна замість літери стовпця писати його заголовок, наприклад <code>select Ціна</code>. Для звичайного діапазону використовуй A, B, C… або нотацію Col1, Col2, Col3…</div>`
+    },
+    {
+      title:'WHERE — фільтруємо рядки', kicker:'Крок 8 · Умова',
+      lead:'WHERE залишає лише ті рядки, у яких значення відповідає заданій умові. Саме тут ми пояснюємо таблиці, що вважати потрібним записом.',
+      body:`<div class="ql-code"><pre>where C &gt; 1000</pre></div>
+      <div class="ql-token-grid"><div class="ql-token-card"><span class="token">where</span><h3>Умова відбору</h3><p>Після цього слова записуємо перевірку для кожного рядка.</p></div><div class="ql-token-card"><span class="token">C</span><h3>Стовпець для перевірки</h3><p>У прикладі це стовпець «Ціна».</p></div><div class="ql-token-card"><span class="token">&gt;</span><h3>Знак порівняння</h3><p>Більше ніж. Рядки з ціною 1000 або меншою не пройдуть.</p></div><div class="ql-token-card"><span class="token">1000</span><h3>Значення для порівняння</h3><p>Числа записуємо без лапок.</p></div></div>
+      <div class="ql-callout teal"><strong>Основні оператори:</strong> <code>=</code> дорівнює; <code>&lt;&gt;</code> не дорівнює; <code>&gt;</code> більше; <code>&lt;</code> менше; <code>&gt;=</code> більше або дорівнює; <code>&lt;=</code> менше або дорівнює.</div>
+      <div class="ql-code"><pre>where B = 'Аксесуар'</pre></div>
+      <p style="font-size:12px;color:#62728a;line-height:1.6">Якщо порівнюємо текст, саме значення потрібно взяти в одинарні лапки. Наприклад, <code>'Аксесуар'</code>. Якщо число — лапки не потрібні.</p>`
+    },
+    {
+      title:'ORDER BY — впорядковуємо результат', kicker:'Крок 9 · Сортування',
+      lead:'ORDER BY відповідає за порядок рядків у результаті. Наприклад, можна показати товари спочатку з найбільшою ціною або розташувати назви за абеткою.',
+      body:`<div class="ql-code"><pre>order by C desc</pre></div>
+      <div class="ql-token-grid"><div class="ql-token-card"><span class="token">order</span><h3>Порядок</h3><p>Частина команди сортування.</p></div><div class="ql-token-card"><span class="token">by</span><h3>За чим?</h3><p>Разом ORDER BY означає «впорядкувати за стовпцем».</p></div><div class="ql-token-card"><span class="token">C</span><h3>Стовпець сортування</h3><p>У прикладі — ціна.</p></div><div class="ql-token-card"><span class="token">desc</span><h3>За спаданням</h3><p>Від більшого до меншого. Для ціни — від найдорожчого до найдешевшого.</p></div></div>
+      <div class="ql-code"><pre>order by C asc</pre></div>
+      <div class="ql-callout teal"><strong>ASC</strong> — за зростанням: від меншого до більшого. <strong>DESC</strong> — за спаданням: від більшого до меншого. Якщо не вказати ASC або DESC, за замовчуванням використовується зростання.</div>
+      <div class="ql-callout gold"><strong>Важливо:</strong> ORDER BY не відбирає рядки, а лише змінює їхній порядок. Для відбору використовується WHERE.</div>`
+    },
+    {
+      title:'Збираємо запит докупи', kicker:'Крок 10 · Повна конструкція',
+      lead:'Тепер поєднаємо три команди в одному запиті. У запиті вони записуються саме в такому порядку: спочатку SELECT, потім WHERE, потім ORDER BY.',
+      body:`<div class="ql-code"><pre>=QUERY(A1:E7; "select A, C where C &gt; 1000 order by C desc"; 1)</pre></div>
+      <div class="ql-mini-steps"><div class="ql-mini"><b>SELECT A, C</b><span>Покажи назву товару та його ціну.</span></div><div class="ql-mini"><b>WHERE C &gt; 1000</b><span>Залиш лише товари дорожчі за 1000.</span></div><div class="ql-mini"><b>ORDER BY C DESC</b><span>Постав найдорожчі товари на початок.</span></div></div>
+      <div class="ql-callout"><strong>А що означає остання 1?</strong> Це третій параметр функції — кількість рядків заголовків у джерелі. У нашому діапазоні A1:E7 перший рядок містить назви стовпців, тому вказуємо 1.</div>
+      <div class="ql-token-grid"><div class="ql-token-card"><span class="token">1</span><h3>Є один рядок заголовків</h3><p>Використовуй, якщо діапазон починається з назв стовпців.</p></div><div class="ql-token-card"><span class="token">0</span><h3>Заголовків немає</h3><p>Використовуй, якщо джерело містить лише записи без рядка назв.</p></div></div>
+      <div class="ql-callout gold"><strong>Підказка:</strong> цей параметр не входить у текст SQL-подібного запиту. Він стоїть після закривальної лапки, окремо, як третій параметр функції.</div>`
+    },
+    {
+      title:'Перевір себе та запам’ятай', kicker:'Крок 11 · Підсумок',
+      lead:'Ти вже знаєш, як побудувати простий запит. Перевір, чи правильно розумієш призначення кожної частини.',
+      body:`<div class="ql-callout teal"><strong>Формула-підказка:</strong><br><code>=QUERY(діапазон; "select стовпці where умова order by стовпець desc"; кількість_заголовків)</code></div>
+      <div class="ql-token-grid"><div class="ql-token-card"><span class="token">data</span><h3>Де шукаємо?</h3><p>Діапазон, іменований діапазон або посилання на таблицю.</p></div><div class="ql-token-card"><span class="token">SELECT</span><h3>Що показати?</h3><p>Стовпці результату.</p></div><div class="ql-token-card"><span class="token">WHERE</span><h3>Які записи залишити?</h3><p>Рядки, що пройшли умову.</p></div><div class="ql-token-card"><span class="token">ORDER BY</span><h3>У якому порядку?</h3><p>Сортування знайдених рядків.</p></div><div class="ql-token-card"><span class="token">headers</span><h3>Скільки рядків назв?</h3><p>Зазвичай 1 або 0.</p></div><div class="ql-token-card"><span class="token">" текст "</span><h3>Де записано запит?</h3><p>У другому параметрі, як текст у лапках.</p></div></div>
+      <div class="ql-quiz"><h3>Мініперевірка</h3><p>Потрібно показати назву та ціну товарів дорожче 1000 і впорядкувати їх від найдорожчого до найдешевшого. Який запит правильний?</p>
+        <label><input type="radio" name="ql-quiz" value="a"> <span><code>select A, C where C &gt; 1000 order by C desc</code></span></label>
+        <label><input type="radio" name="ql-quiz" value="b"> <span><code>select C, A order by C where C &gt; 1000</code></span></label>
+        <label><input type="radio" name="ql-quiz" value="c"> <span><code>where C &gt; 1000 select A, C order by C asc</code></span></label>
+        <button type="button" class="ql-btn primary" id="ql-check-quiz" style="margin-top:7px">Перевірити відповідь</button>
+        <div class="ql-quiz-feedback" id="ql-quiz-feedback" role="status"></div>
+      </div>
+      <div class="ql-callout gold"><strong>Ще одна важлива деталь:</strong> результат QUERY розгортається з клітинки, де записана формула, вправо та вниз. Переконайся, що ці клітинки вільні — інакше результату може завадити наявний вміст.</div>`
+    }
+  ];
+
+  let current = 0;
+  const list = document.getElementById('ql-step-list');
+  const lesson = document.getElementById('ql-lesson');
+  const prev = document.getElementById('ql-prev');
+  const next = document.getElementById('ql-next');
+  const stepCounter = document.getElementById('ql-step-counter');
+  const percent = document.getElementById('ql-progress-percent');
+  const progressFill = document.getElementById('ql-progress-fill');
+  const safe = (s) => String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+
+  function renderNav(){
+    list.innerHTML = steps.map((s,i)=>`<button class="ql-step-link ${i<current?'is-done':''}" type="button" data-step="${i}" ${i===current?'aria-current="step"':''}><span class="ql-step-num">${i<current?'✓':i+1}</span><span class="ql-step-label">${safe(s.title)}</span></button>`).join('');
+    list.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>showStep(Number(btn.dataset.step))));
+  }
+  function showStep(index){
+    current = Math.max(0,Math.min(steps.length-1,index));
+    const s = steps[current];
+    lesson.innerHTML = `<div class="ql-lesson-kicker">${s.kicker}</div><h2>${s.title}</h2><p class="ql-lead">${s.lead}</p>${s.body}`;
+    stepCounter.textContent = `Крок ${current+1} із ${steps.length}`;
+    const pct = Math.round(((current+1)/steps.length)*100);
+    percent.textContent = `${pct}%`;
+    progressFill.style.width = `${pct}%`;
+    prev.disabled = current===0;
+    next.textContent = current===steps.length-1?'На початок ↺':'Наступний крок →';
+    renderNav();
+    const quizBtn = document.getElementById('ql-check-quiz');
+    if(quizBtn){
+      quizBtn.addEventListener('click',()=>{
+        const chosen = lesson.querySelector('input[name="ql-quiz"]:checked');
+        const feedback = document.getElementById('ql-quiz-feedback');
+        if(!chosen){feedback.className='ql-quiz-feedback bad';feedback.textContent='Спочатку обери один варіант.';return;}
+        if(chosen.value==='a'){feedback.className='ql-quiz-feedback good';feedback.textContent='Правильно! Спочатку SELECT, потім WHERE, а після нього ORDER BY. DESC сортує за спаданням.';}
+        else{feedback.className='ql-quiz-feedback bad';feedback.textContent='Поки що не так. Згадай порядок: SELECT → WHERE → ORDER BY. Для найдорожчих товарів спочатку потрібен DESC.';}
+      });
+    }
+  }
+  prev.addEventListener('click',()=>showStep(current-1));
+  next.addEventListener('click',()=>showStep(current===steps.length-1?0:current+1));
+
+  const colChecks = [...document.querySelectorAll('#ql-column-checks input')];
+  const filterField = document.getElementById('ql-filter-field');
+  const filterOp = document.getElementById('ql-filter-op');
+  const filterValue = document.getElementById('ql-filter-value');
+  const sortField = document.getElementById('ql-sort-field');
+  const sortDirection = document.getElementById('ql-sort-direction');
+  const formulaText = document.getElementById('ql-formula-text');
+  const resultTable = document.getElementById('ql-result-table');
+  const resultCount = document.getElementById('ql-result-count');
+
+  function updateFilterControl(){
+    const isText = filterField.value==='1';
+    filterValue.type = isText?'text':'number';
+    filterValue.value = isText?'Аксесуар':(filterField.value==='3'?'10':'1000');
+    if(isText){filterOp.innerHTML='<option value="=">=</option><option value="<>" selected>&lt;&gt;</option>';filterOp.value='=';}
+    else{filterOp.innerHTML='<option value="&gt;">&gt;</option><option value="&lt;">&lt;</option><option value="=">=</option><option value="&gt;=">&gt;=</option><option value="&lt;=">&lt;=</option><option value="&lt;&gt;">&lt;&gt;</option>';filterOp.value='>';}
+  }
+  function renderDemo(){
+    let selected = colChecks.filter(c=>c.checked).map(c=>Number(c.value));
+    if(selected.length===0){selected=[0];colChecks[0].checked=true;}
+    const allSelected = selected.length===headers.length;
+    let queryParts = [`select ${allSelected?'*':selected.map(i=>letters[i]).join(', ')}`];
+    let shownRows = rows.map(r=>r.slice());
+    const f = filterField.value;
+    if(f!=='none'){
+      const op = filterOp.value.replace(/&gt;/g,'>').replace(/&lt;/g,'<');
+      const raw = filterValue.value;
+      const isText = f==='1';
+      const val = isText?raw:Number(raw);
+      const columnLetter = letters[Number(f)];
+      const conditionValue = isText?`'${String(raw).replace(/'/g,"\\'")}'`:String(val);
+      queryParts.push(`where ${columnLetter} ${op} ${conditionValue}`);
+      shownRows = shownRows.filter(r=>{
+        const cell = r[Number(f)];
+        if(isText){return op==='='?String(cell)===String(val):String(cell)!==String(val);}
+        if(op==='>')return cell>val;
+        if(op==='<')return cell<val;
+        if(op==='>=')return cell>=val;
+        if(op==='<=')return cell<=val;
+        if(op==='<>')return cell!==val;
+        return cell===val;
+      });
+    }
+    const s = sortField.value;
+    if(s!=='none'){
+      const dir = sortDirection.value;
+      queryParts.push(`order by ${letters[Number(s)]} ${dir}`);
+      const idx=Number(s);
+      shownRows.sort((a,b)=>{
+        const av=a[idx],bv=b[idx];
+        const cmp=typeof av==='number'&&typeof bv==='number'?av-bv:String(av).localeCompare(String(bv),'uk');
+        return dir==='desc'?-cmp:cmp;
+      });
+    }
+    const query = queryParts.join(' ');
+    formulaText.textContent = `=QUERY(A1:E7; "${query}"; 1)`;
+    const outputHeads=selected.map(i=>headers[i]);
+    resultCount.textContent=`${shownRows.length} рядків`;
+    if(shownRows.length===0){resultTable.innerHTML='<div class="ql-empty">За такою умовою записів не знайдено.</div>';return;}
+    resultTable.innerHTML=`<table class="ql-result"><thead><tr>${outputHeads.map(h=>`<th>${safe(h)}</th>`).join('')}</tr></thead><tbody>${shownRows.map(r=>`<tr>${selected.map(i=>`<td>${safe(r[i])}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  }
+  filterField.addEventListener('change',()=>{updateFilterControl();renderDemo();});
+  [filterOp,filterValue,sortField,sortDirection,...colChecks].forEach(el=>el.addEventListener('input',renderDemo));
+  [filterOp,sortField,sortDirection].forEach(el=>el.addEventListener('change',renderDemo));
+  updateFilterControl();
+  renderDemo();
+  showStep(0);
+})();
+</script>
+</body>
+</html>
