@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f3f6fc">
+<title>Навчальний симулятор НСД — алгоритм Евкліда</title>
+<style>
+:root{--bg:#f3f6fc;--paper:#fff;--ink:#18263d;--muted:#65758d;--line:#dce5f0;--blue:#2865d8;--blue2:#eaf1ff;--green:#16845c;--green2:#e7f7ef;--orange:#d98216;--orange2:#fff3df;--red:#b42318;--shadow:0 9px 30px rgba(28,48,80,.075)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Arial,sans-serif}main{width:min(1160px,calc(100% - 28px));margin:26px auto 56px}h1{font-size:clamp(1.65rem,3.2vw,2.35rem);line-height:1.18;margin:0 0 9px;letter-spacing:-.025em}h2{font-size:1.15rem;line-height:1.3;margin:0 0 13px}h3{font-size:1rem;margin:0 0 8px}p{margin:7px 0}.intro{color:var(--muted);max-width:850px;margin:0 0 20px}.panel{background:var(--paper);border:1px solid var(--line);border-radius:17px;padding:20px;margin:15px 0;box-shadow:var(--shadow)}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}.kicker{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:var(--blue)}.controls{display:flex;align-items:end;flex-wrap:wrap;gap:12px}.field{display:grid;gap:5px;min-width:145px}label{font-size:.92rem;font-weight:700}input{font:inherit;color:var(--ink);background:#fff;border:1px solid #bdc9da;border-radius:10px;padding:10px 12px;width:100%}input:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #9bbcff;outline-offset:2px}button{font:650 .94rem system-ui;border:0;border-radius:10px;padding:10px 15px;background:var(--blue);color:white;cursor:pointer;transition:filter .15s,transform .15s}button:hover{filter:brightness(.96)}button:active{transform:translateY(1px)}button:disabled{opacity:.42;cursor:not-allowed;transform:none}button.soft{background:#edf2f8;color:#29415f}button.green{background:var(--green)}button.small{font-size:.84rem;padding:7px 10px}.hint,.muted{color:var(--muted);font-size:.88rem}.error{min-height:1.35em;color:var(--red);font-weight:650;margin-top:7px}.preset-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.preset{padding:6px 10px;font-size:.82rem;background:#f1f5fa;color:#314761;border:1px solid var(--line)}.top-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(260px,.8fr);gap:15px}.stage-panel{min-height:390px}.stage-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.pill{display:inline-flex;align-items:center;background:var(--blue2);color:#214fae;border-radius:99px;padding:5px 11px;font-weight:750;font-size:.82rem}.progress-track{height:8px;background:#e9eef6;border-radius:99px;overflow:hidden;margin:12px 0 18px}.progress-fill{height:100%;background:linear-gradient(90deg,#2865d8,#5a91f3);width:0%;transition:width .2s}.stage-title{font-size:clamp(1.25rem,2.5vw,1.65rem);line-height:1.25;margin:0 0 12px}.stage-body{font-size:1.02rem}.stage-body ul{padding-left:22px}.stage-body li{margin:5px 0}.formula-box{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;background:#f6f8fc;border:1px solid var(--line);border-radius:13px;padding:17px 12px;margin:15px 0;font-size:clamp(1.22rem,3vw,1.8rem);font-weight:800}.a-color{color:var(--blue)}.b-color{color:var(--green)}.r-color{color:var(--orange)}.term{display:inline-block;border-radius:7px;padding:1px 7px;font-weight:750}.term.blue{background:var(--blue2);color:#214fae}.term.green{background:var(--green2);color:#08744d}.term.orange{background:var(--orange2);color:#a85d00}.note{border-left:4px solid var(--blue);background:#f3f7ff;border-radius:8px;padding:12px 14px;margin:14px 0}.note.green-note{border-color:var(--green);background:#effaf4}.note.orange-note{border-color:var(--orange);background:#fff8ec}.graph-card{border:1px solid var(--line);border-radius:13px;padding:13px;margin:15px 0 5px;background:#fcfdff}.graph-title{font-weight:750;margin-bottom:5px}svg{display:block;width:100%;height:auto;min-height:115px}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.84rem;color:var(--muted);margin-top:5px}.swatch{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}.stage-nav{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:17px}.nav-main{display:flex;gap:8px;flex-wrap:wrap}.side-card{background:#f8faff;border:1px solid var(--line);border-radius:13px;padding:15px;margin-bottom:12px}.side-card:last-child{margin-bottom:0}.side-card h3{display:flex;align-items:center;gap:7px}.big-pair{font-size:1.45rem;font-weight:850;letter-spacing:.01em}.pair-arrow{color:var(--muted);padding:0 5px}.mini-tag{font-size:.79rem;color:var(--muted);font-weight:650}.sequence{display:grid;gap:8px}.seq-row{display:grid;grid-template-columns:68px minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:white}.seq-row.current{border:2px solid var(--blue);background:#f5f8ff}.seq-row.passed{background:#f2fbf6;border-color:#cdebdc}.seq-num{font-size:.82rem;font-weight:800;color:var(--muted)}.seq-formula{font-weight:750;font-variant-numeric:tabular-nums}.seq-state{font-size:.8rem;color:var(--muted);text-align:right}.answer-card{display:flex;align-items:center;gap:16px;background:var(--green2);border:1px solid #bce7d1;border-radius:13px;padding:16px}.answer-number{font-size:2.15rem;line-height:1;font-weight:900;color:var(--green);min-width:55px;text-align:center}details{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:12px}summary{font-weight:750;cursor:pointer}details p{margin:10px 0 2px}.concept-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.concept{background:#f7f9fd;border:1px solid var(--line);border-radius:12px;padding:13px}.concept strong{display:block;margin-bottom:4px}.concept p{font-size:.91rem;color:var(--muted);margin:0}.footnote{font-size:.87rem;color:var(--muted);margin-top:12px}
+@media(max-width:780px){.top-grid{grid-template-columns:1fr}.stage-panel{min-height:0}.concept-grid{grid-template-columns:1fr}}@media(max-width:560px){main{width:calc(100% - 16px);margin:14px auto 35px}.panel{padding:14px;border-radius:13px}.seq-row{grid-template-columns:49px minmax(0,1fr);gap:5px}.seq-state{grid-column:2;text-align:left}.field{min-width:calc(50% - 8px);flex:1}.controls button{flex:1}.formula-box{gap:5px;padding:13px 8px}}
+</style>
+</head>
+<body>
+<main>
+<header><div class="kicker">Інтерактивний навчальний тренажер</div><h1>Найбільший спільний дільник — алгоритм Евкліда</h1><p class="intro">Пройдіть обчислення маленькими кроками. Симулятор пояснює не тільки <em>що</em> робимо, а й <em>чому</em> маємо право це робити. Кожну дію можна переглянути окремо або запустити автоматичний показ.</p></header>
+<section class="panel"><div class="panel-head"><h2>Початкові числа</h2><span class="pill">Постановка задачі</span></div><div class="controls"><div class="field"><label for="inputA">Перше число (a)</label><input id="inputA" type="number" min="1" max="1000000000" step="1" value="252"></div><div class="field"><label for="inputB">Друге число (b)</label><input id="inputB" type="number" min="1" max="1000000000" step="1" value="105"></div><button id="startBtn">Обчислити й почати</button></div><div class="hint">Вводьте цілі натуральні числа від 1 до 1 000 000 000. Алгоритм працює і тоді, коли перше число менше за друге.</div><div id="error" class="error" role="alert"></div><div class="preset-row"><span class="hint" style="align-self:center">Приклади:</span><button class="preset" data-a="252" data-b="105">252 і 105</button><button class="preset" data-a="48" data-b="18">48 і 18</button><button class="preset" data-a="17" data-b="5">17 і 5</button><button class="preset" data-a="144" data-b="60">144 і 60</button><button class="preset" data-a="24" data-b="24">24 і 24</button></div></section>
+<div class="top-grid">
+<section class="panel stage-panel"><div class="stage-head"><span id="stageBadge" class="pill">Підготовка</span><span id="stageCount" class="muted">Етап 1</span></div><div class="progress-track"><div class="progress-fill" id="progressFill"></div></div><h2 class="stage-title" id="stageTitle">З чого починаємо?</h2><div class="stage-body" id="stageBody" aria-live="polite"></div><div class="stage-nav"><div class="nav-main"><button class="soft" id="prevBtn">← Назад</button><button id="nextBtn">Наступний мікрокрок →</button></div><div class="nav-main"><button class="soft" id="autoBtn">▶ Автопоказ</button><button class="soft" id="finishBtn">Одразу до відповіді</button></div></div></section>
+<aside><section class="side-card"><h3>Поточна пара чисел</h3><div class="big-pair" id="currentPair">252 <span class="pair-arrow">і</span> 105</div><div class="mini-tag" id="pairHint">Саме з цією парою працюємо зараз</div></section><section class="side-card"><h3>Що шукаємо?</h3><p><b>НСД</b> — найбільше число, на яке обидва числа діляться без остачі.</p><p class="muted">Наприклад, спільні дільники 12 і 18: 1, 2, 3, 6. Найбільший із них — 6.</p></section><section class="side-card"><h3>Головна ідея</h3><div class="formula-box" style="font-size:1.1rem;margin:6px 0"><span class="a-color">a</span> = <span class="b-color">b</span> · q + <span class="r-color">r</span></div><p class="muted">Ділимо більше число на менше, запам'ятовуємо остачу й повторюємо вже з парою «дільник та остача».</p></section></aside>
+</div>
+<section class="panel"><div class="panel-head"><h2>Увесь ланцюжок ділення</h2><span class="muted">Поточна дія виділяється рамкою</span></div><div id="sequence" class="sequence"></div><p class="footnote">Кожен наступний рядок утворюється з попереднього: нове перше число — це попередній дільник, а нове друге число — остача.</p></section>
+<section class="panel"><h2>Як читати ділення з остачею?</h2><div class="concept-grid"><div class="concept"><strong><span class="a-color">Ділене (a)</span></strong><p>Число, яке ділимо. На схемі — увесь відрізок.</p></div><div class="concept"><strong><span class="b-color">Дільник (b)</span></strong><p>Розмір однієї повної групи, яку відраховуємо від діленого.</p></div><div class="concept"><strong><span class="r-color">Остача (r)</span></strong><p>Те, що залишилося після утворення всіх повних груп. Вона завжди менша за дільник.</p></div></div><details><summary>Пояснення: чому НСД не змінюється після заміни (a, b) на (b, r)?</summary><p>Маємо рівність <b>a = b · q + r</b>, тобто <b>r = a − b · q</b>.</p><p>Число, яке ділить і <b>a</b>, і <b>b</b>, обов'язково ділить також їхню різницю <b>r</b>. Отже, кожен спільний дільник пари (a, b) є спільним дільником пари (b, r).</p><p>Навпаки, якщо число ділить <b>b</b> і <b>r</b>, то воно ділить і суму <b>b · q + r = a</b>. Отже, воно є спільним дільником і чисел a та b.</p><p><b>Висновок:</b> у пар (a, b) та (b, r) однакові спільні дільники, тому їхній НСД однаковий.</p></details></section>
+</main>
+<script>
+(() => {
+  "use strict";
+  const el = id => document.getElementById(id);
+  let originalA=252, originalB=105, divisions=[], slides=[], slideIndex=0, autoTimer=null, gcd=0, normalizedA=0, normalizedB=0;
+  const format = n => Number(n).toLocaleString("uk-UA");
+
+  // Створюємо послідовність ділення: a = b*q + r. Наступна пара — (b,r).
+  function calculate(a,b){
+    const result=[];
+    while(b!==0){const q=Math.floor(a/b),r=a%b;result.push({a,b,q,r});a=b;b=r;}
+    return {divisions:result,gcd:a};
+  }
+  function addSlide(data){slides.push(data);}
+
+  // На кожне ділення створюємо п'ять навчальних мікрокроків.
+  function makeSlides(){
+    slides=[];
+    const swapped=originalA<originalB;
+    normalizedA=Math.max(originalA,originalB);normalizedB=Math.min(originalA,originalB);
+    addSlide({badge:"Постановка задачі",title:"З чого починаємо?",body:`
+      <p>Потрібно знайти <b>найбільший спільний дільник</b> чисел <span class="term blue">${format(originalA)}</span> і <span class="term green">${format(originalB)}</span>.</p>
+      <p>Спільний дільник — це число, на яке <b>обидва</b> початкові числа діляться без остачі. Нас цікавить найбільший такий дільник.</p>
+      <div class="note"><b>Наш план:</b> багато разів ділити більше число на менше, але замість довгого пошуку всіх дільників використовувати тільки остачу.</div>
+      ${swapped?`<p>Спочатку поміняємо числа місцями: зручніше, коли ділене не менше за дільник. Це не змінює НСД: НСД(${format(originalA)}, ${format(originalB)}) = НСД(${format(normalizedA)}, ${format(normalizedB)}).</p>`:`<p>Числа вже розташовані зручно: перше не менше за друге. Тому можемо відразу почати ділення.</p>`}
+      <div class="formula-box"><span class="a-color">${format(normalizedA)}</span><span>і</span><span class="b-color">${format(normalizedB)}</span></div><p class="muted">Це наша перша пара для алгоритму.</p>`});
+
+    divisions.forEach((s,index)=>{
+      const n=index+1;
+      addSlide({badge:`Ділення ${n} · 1 з 5`,divisionIndex:index,title:`Крок ${n}. Визначаємо, що ділимо`,body:`
+        <p>На початку цього кроку маємо пару чисел:</p><div class="formula-box"><span class="a-color">${format(s.a)}</span><span>і</span><span class="b-color">${format(s.b)}</span></div>
+        <p>Більше число — <b>${format(s.a)}</b>. Його ділимо на менше число — <b>${format(s.b)}</b>.</p>
+        <div class="note"><b>Запитання, на яке відповідає цей крок:</b> скільки повних разів число ${format(s.b)} поміститься в числі ${format(s.a)}?</div><p>Зараз знайдемо цілу частину результату ділення та остачу.</p>`});
+      addSlide({badge:`Ділення ${n} · 2 з 5`,divisionIndex:index,title:`Крок ${n}. Виконуємо ділення`,body:`
+        <p>Ділимо <b>${format(s.a)}</b> на <b>${format(s.b)}</b>.</p>
+        <div class="formula-box"><span class="a-color">${format(s.a)}</span><span>:</span><span class="b-color">${format(s.b)}</span><span>=</span><span>${format(s.q)}</span><span>ост.</span><span class="r-color">${format(s.r)}</span></div>
+        <p>Отримали два важливі результати:</p><ul><li><b>Частка ${format(s.q)}</b> — стільки повних разів дільник уміщується в діленому.</li><li><b>Остача ${format(s.r)}</b> — стільки залишається після віднімання всіх повних груп.</li></ul>
+        <div class="note">Перевірка: <b>${format(s.b)} × ${format(s.q)} + ${format(s.r)} = ${format(s.a)}</b>.</div>`});
+      addSlide({badge:`Ділення ${n} · 3 з 5`,divisionIndex:index,title:`Крок ${n}. Уявляємо ділення як групи`,body:`
+        <p>Уявімо число <b>${format(s.a)}</b> як набір однакових груп. У кожній повній групі — по <b>${format(s.b)}</b> одиниць.</p>
+        <p>Ми змогли скласти <b>${format(s.q)} повних груп</b>. Помаранчева частина — це те, що не утворило ще одну повну групу.</p>
+        <div class="graph-card"><div class="graph-title">Графічна модель ділення ${format(s.a)} на ${format(s.b)}</div><div id="divisionGraphic"></div><div class="legend"><span><i class="swatch" style="background:#3977e8"></i>Повні групи</span><span><i class="swatch" style="background:#f2a43a"></i>Залишок (остача)</span></div></div>
+        <p class="muted">Синя довжина відповідає ${format(s.q*s.b)}, помаранчева — ${format(s.r)}.</p>`});
+      addSlide({badge:`Ділення ${n} · 4 з 5`,divisionIndex:index,title:s.r>0?`Крок ${n}. Використовуємо остачу`:`Крок ${n}. Остача дорівнює нулю`,body:s.r>0?`
+        <p>Остача <b>${format(s.r)}</b> не дорівнює нулю. Це означає, що ділення ще не завершило пошук.</p><p>За правилом алгоритму ми утворюємо <b>нову пару</b>:</p>
+        <div class="formula-box"><span class="b-color">${format(s.b)}</span><span>і</span><span class="r-color">${format(s.r)}</span></div>
+        <p>Попередній дільник стає новим діленим, а остача стає новим дільником.</p><div class="note orange-note">Наступна дія: поділити <b>${format(s.b)}</b> на <b>${format(s.r)}</b>.</div>`:`
+        <p>Ми отримали <b>остачу 0</b>. Це означає, що ${format(s.a)} ділиться на ${format(s.b)} без залишку.</p><div class="formula-box"><span class="a-color">${format(s.a)}</span><span>=</span><span class="b-color">${format(s.b)}</span><span>×</span><span>${format(s.q)}</span></div>
+        <div class="note green-note">Зупиняємо алгоритм. Нову пару з ненульовою остачею створювати вже не потрібно.</div>`});
+      addSlide({badge:`Ділення ${n} · 5 з 5`,divisionIndex:index,title:`Крок ${n}. Чому НСД зберігається?`,body:s.r>0?`
+        <p>Ми замінюємо пару <b>(${format(s.a)}, ${format(s.b)})</b> на пару <b>(${format(s.b)}, ${format(s.r)})</b>. Чому результат пошуку не змінюється?</p>
+        <p>З рівності <b>${format(s.a)} = ${format(s.b)} × ${format(s.q)} + ${format(s.r)}</b> маємо:</p>
+        <div class="formula-box"><span class="r-color">${format(s.r)}</span><span>=</span><span class="a-color">${format(s.a)}</span><span>−</span><span class="b-color">${format(s.b)} × ${format(s.q)}</span></div>
+        <ul><li>Якщо число ділить і ${format(s.a)}, і ${format(s.b)}, то воно ділить їхню різницю — ${format(s.r)}.</li><li>Якщо число ділить ${format(s.b)} і ${format(s.r)}, то воно ділить і ${format(s.b)} × ${format(s.q)} + ${format(s.r)} — тобто ${format(s.a)}.</li></ul>
+        <div class="note green-note"><b>Висновок:</b> спільні дільники не змінилися. Тому НСД також не змінився. Можна переходити до нової пари: <b>(${format(s.b)}, ${format(s.r)})</b>.</div>`:`
+        <p>На цьому кроці ${format(s.a)} = ${format(s.b)} × ${format(s.q)}. Отже, ${format(s.b)} ділить і ${format(s.a)}, і саме себе.</p>
+        <p>Попередні кроки показали, що НСД не змінюється під час кожної заміни пари. Тепер остача стала нулем, а останнє ненульове число — <b>${format(s.b)}</b>.</p>
+        <div class="note green-note"><b>Отже, шуканий НСД дорівнює ${format(s.b)}.</b> Це найбільше число, яке ділить обидва початкові числа без остачі.</div>`});
+    });
+    addSlide({badge:"Підсумок",title:"Пошук завершено: ми знайшли НСД",body:`
+      <div class="answer-card"><div class="answer-number">${format(gcd)}</div><div><b>НСД(${format(originalA)}, ${format(originalB)}) = ${format(gcd)}</b><br>Це відповідь алгоритму Евкліда.</div></div>
+      <p>Подивімося на останнє ділення:</p><div class="formula-box"><span class="a-color">${format(divisions[divisions.length-1].a)}</span><span>=</span><span class="b-color">${format(gcd)}</span><span>×</span><span>${format(divisions[divisions.length-1].q)}</span><span>+</span><span class="r-color">0</span></div>
+      <p>Остача дорівнює нулю. Отже, останній ненульовий дільник — <b>${format(gcd)}</b>.</p>
+      <div class="note green-note"><b>Перевірка:</b> ${format(originalA)} : ${format(gcd)} = ${format(originalA/gcd)}; ${format(originalB)} : ${format(gcd)} = ${format(originalB/gcd)}. Обидва результати — цілі числа.</div>
+      <p>Алгоритм завершився, бо на кожному кроці ненульова остача менша за попередній дільник. Натуральні числа не можуть зменшуватися нескінченно.</p><button class="green" id="restartLesson">Пройти ще раз з цими числами</button>`});
+  }
+
+  // Малюємо смугу: синя частина — повні групи, помаранчева — остача.
+  function drawDivision(s){
+    const host=el("divisionGraphic");if(!host)return;
+    const x=20,y=31,width=680,height=48;
+    const blueWidth=width*(s.q*s.b)/s.a,orangeWidth=width-blueWidth;
+    let svg=`<svg viewBox="0 0 720 125" role="img" aria-label="Схема: ${s.q} повних груп по ${s.b} та остача ${s.r}"><text x="${x}" y="18" font-size="13" fill="#53647d">Усього ${format(s.a)}</text>`;
+    if(blueWidth>0){svg+=`<rect x="${x}" y="${y}" width="${Math.max(1,blueWidth)}" height="${height}" rx="5" fill="#3977e8"/>`;
+      if(s.q<=10&&blueWidth/s.q>22){const groupWidth=blueWidth/s.q;for(let i=1;i<s.q;i++){const lx=x+i*groupWidth;svg+=`<line x1="${lx}" y1="${y+3}" x2="${lx}" y2="${y+height-3}" stroke="#d9e6ff" stroke-width="2"/>`;}if(groupWidth>48){for(let i=0;i<s.q;i++){svg+=`<text x="${x+(i+.5)*groupWidth}" y="${y+29}" font-size="12" text-anchor="middle" fill="white" font-weight="700">${format(s.b)}</text>`;}}}
+      else{svg+=`<text x="${x+blueWidth/2}" y="${y+29}" font-size="14" text-anchor="middle" fill="white" font-weight="700">${format(s.q)} повних груп × ${format(s.b)}</text>`;}}
+    if(s.r>0){const rx=x+blueWidth;svg+=`<rect x="${rx}" y="${y}" width="${Math.max(2,orangeWidth)}" height="${height}" rx="4" fill="#f2a43a"/>`;if(orangeWidth>48){svg+=`<text x="${rx+orangeWidth/2}" y="${y+29}" font-size="13" text-anchor="middle" fill="#573300" font-weight="700">${format(s.r)}</text>`;}svg+=`<text x="${Math.min(700,rx+orangeWidth/2)}" y="101" font-size="12" text-anchor="middle" fill="#a85d00">остача ${format(s.r)}</text>`;}else{svg+=`<text x="700" y="101" font-size="12" text-anchor="end" fill="#16845c">Без остачі</text>`;}
+    svg+=`<text x="${x}" y="101" font-size="12" fill="#2865d8">${format(s.q)} повних груп</text></svg>`;host.innerHTML=svg;
+  }
+  function updateSequence(activeDivision){
+    el("sequence").innerHTML=divisions.map((s,i)=>`<div class="seq-row ${i===activeDivision?'current':activeDivision>i?'passed':''}"><span class="seq-num">Крок ${i+1}</span><span class="seq-formula">${format(s.a)} = ${format(s.b)} × ${format(s.q)} + ${format(s.r)}</span><span class="seq-state">${s.r===0?'остача 0 · стоп':`нова пара: ${format(s.b)}, ${format(s.r)}`}</span></div>`).join("");
+  }
+  function render(){
+    const slide=slides[slideIndex];if(!slide)return;
+    el("stageBadge").textContent=slide.badge;el("stageCount").textContent=`Мікрокрок ${slideIndex+1} із ${slides.length}`;el("stageTitle").textContent=slide.title;el("stageBody").innerHTML=slide.body;el("progressFill").style.width=`${((slideIndex+1)/slides.length)*100}%`;
+    const isIntro=slide.divisionIndex===undefined;let activeDivision=isIntro?-1:slide.divisionIndex;if(slide.badge==="Підсумок")activeDivision=divisions.length-1;updateSequence(activeDivision);
+    if(slide.badge==="Підсумок"){el("currentPair").innerHTML=`<span style="color:var(--green)">НСД = ${format(gcd)}</span>`;el("pairHint").textContent="Остача стала нулем — алгоритм завершено";}
+    else if(isIntro){el("currentPair").innerHTML=`${format(normalizedA)} <span class="pair-arrow">і</span> ${format(normalizedB)}`;el("pairHint").textContent="Початкова пара після впорядкування чисел";}
+    else{const s=divisions[slide.divisionIndex];el("currentPair").innerHTML=`${format(s.a)} <span class="pair-arrow">і</span> ${format(s.b)}`;el("pairHint").textContent=`Ділення ${slide.divisionIndex+1}: ділене та дільник`;}
+    el("prevBtn").disabled=slideIndex===0;el("nextBtn").disabled=slideIndex===slides.length-1;el("finishBtn").disabled=slideIndex===slides.length-1;
+    if(slide.divisionIndex!==undefined&&slide.badge.includes("3 з 5"))drawDivision(divisions[slide.divisionIndex]);
+    const restart=el("restartLesson");if(restart)restart.addEventListener("click",()=>{stopAuto();slideIndex=0;render();});
+  }
+  function stopAuto(){if(autoTimer!==null)clearInterval(autoTimer);autoTimer=null;el("autoBtn").textContent="▶ Автопоказ";}
+  function startCalculation(){
+    stopAuto();const a=Number(el("inputA").value),b=Number(el("inputB").value);el("error").textContent="";
+    if(!Number.isSafeInteger(a)||!Number.isSafeInteger(b)||a<1||b<1||a>1000000000||b>1000000000){el("error").textContent="Потрібно ввести два цілі натуральні числа від 1 до 1 000 000 000.";return;}
+    originalA=a;originalB=b;const result=calculate(Math.max(a,b),Math.min(a,b));divisions=result.divisions;gcd=result.gcd;makeSlides();slideIndex=0;render();
+  }
+  el("startBtn").addEventListener("click",startCalculation);
+  el("prevBtn").addEventListener("click",()=>{stopAuto();if(slideIndex>0){slideIndex--;render();}});
+  el("nextBtn").addEventListener("click",()=>{stopAuto();if(slideIndex<slides.length-1){slideIndex++;render();}});
+  el("finishBtn").addEventListener("click",()=>{stopAuto();slideIndex=slides.length-1;render();});
+  el("autoBtn").addEventListener("click",()=>{if(autoTimer!==null){stopAuto();return;}if(slideIndex>=slides.length-1)slideIndex=0;el("autoBtn").textContent="Ⅱ Пауза";render();autoTimer=setInterval(()=>{if(slideIndex<slides.length-1){slideIndex++;render();}else stopAuto();},2600);});
+  document.querySelectorAll(".preset").forEach(button=>button.addEventListener("click",()=>{el("inputA").value=button.dataset.a;el("inputB").value=button.dataset.b;startCalculation();}));
+  ["inputA","inputB"].forEach(id=>el(id).addEventListener("keydown",event=>{if(event.key==="Enter")startCalculation();}));
+  startCalculation();
+})();
+</script>
+</body></html>
