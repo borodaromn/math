@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Задача про сірники (N квадратів) — інтерактивний тренажер</title>
+  <style>
+    :root {
+      --ink: #17263c;
+      --muted: #5a6b84;
+      --line: #d6e0ec;
+      --paper: #ffffff;
+      --canvas: #f3f6fb;
+      --navy: #17385f;
+      --blue: #2875c7;
+      --blue-soft: #eaf3ff;
+      --teal: #138579;
+      --teal-soft: #e6f6f2;
+      --red: #b74a55;
+      --red-soft: #fbecef;
+      --gold: #a96d12;
+      --gold-soft: #fff4d9;
+      --wood: #c28538;
+      --wood-head: #8c2f32;
+      --shadow: 0 8px 24px rgba(28, 52, 82, .07);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      line-height: 1.4;
+      font-size: 13.5px;
+    }
+    button, input, select { font: inherit; }
+
+    /* Широкий контейнер під 1920x1080 */
+    .page {
+      width: min(1880px, calc(100% - 22px));
+      margin: 0 auto;
+      padding: 10px 0 18px;
+    }
+
+    /* Компактна верхня шапка */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 9px 15px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .eyebrow {
+      background: var(--teal-soft);
+      color: var(--teal);
+      font-weight: 800;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      font-size: .68rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+    h1 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 1.18rem;
+      font-weight: 850;
+      letter-spacing: -.01em;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: .8rem;
+    }
+    .global-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .inline-field {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #f5f8fc;
+      border: 1px solid #d5e0ed;
+      border-radius: 9px;
+      padding: 3px 8px;
+    }
+    .inline-field label {
+      font-size: .76rem;
+      color: var(--muted);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .inline-field input, .inline-field select {
+      height: 29px;
+      border: 1px solid #c5d3e4;
+      border-radius: 6px;
+      padding: 0 7px;
+      background: #fff;
+      color: var(--ink);
+      font-weight: 750;
+      font-size: .82rem;
+    }
+    .inline-field input { width: 68px; }
+    .inline-field select { min-width: 108px; }
+
+    .preset-group {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .preset-btn {
+      background: #f2f6fb;
+      border: 1px solid #d2deec;
+      border-radius: 7px;
+      height: 29px;
+      padding: 0 8px;
+      font-size: .73rem;
+      font-weight: 700;
+      color: var(--navy);
+      cursor: pointer;
+      transition: background .12s, border-color .12s;
+    }
+    .preset-btn:hover { background: #e4eef9; border-color: #b7cae2; }
+
+    /* Кнопки навігації */
+    .btn {
+      border: 1px solid transparent;
+      border-radius: 9px;
+      height: 33px;
+      padding: 0 11px;
+      cursor: pointer;
+      font-weight: 750;
+      font-size: .78rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: transform .1s, background .12s, border-color .12s;
+      white-space: nowrap;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn:disabled { opacity: .42; cursor: not-allowed; transform: none; }
+    .btn-primary { color: #fff; background: var(--navy); }
+    .btn-primary:hover:not(:disabled) { background: #214c7d; }
+    .btn-light { color: var(--navy); background: #f4f7fb; border-color: #d7e1ed; }
+    .btn-light:hover:not(:disabled) { background: #eaf0f7; }
+    .btn-play { color: #fff; background: var(--teal); }
+    .btn-play:hover:not(:disabled) { background: #0e7168; }
+
+    /* Головна 3-колонкова сітка */
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.32fr) minmax(320px, 1fr) minmax(380px, 1.15fr);
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .panel {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 14px 16px;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      padding-bottom: 7px;
+      border-bottom: 1px solid #edf2f8;
+    }
+    .panel-head h2 {
+      margin: 0;
+      font-size: .96rem;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .muted-pill {
+      font-size: .75rem;
+      color: var(--muted);
+      font-weight: 650;
+    }
+
+    /* Легенда сірників */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: .74rem;
+    }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .swatch {
+      width: 16px;
+      height: 5px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+    .swatch.old { background: var(--wood); }
+    .swatch.plus4 { background: #d98a16; }
+    .swatch.plus3 { background: var(--red); }
+    .swatch.plus2 { background: var(--teal); }
+    /* Контейнер для SVG сірників */
+    .svg-stage {
+      flex: 1;
+      height: 390px;
+      min-height: 360px;
+      max-height: 440px;
+      background: radial-gradient(circle at 50% 45%, #fbfdff 0%, #f1f5fb 100%);
+      border: 1px solid #dfe7f2;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      padding: 40px 14px 12px;
+    }
+    #matchstickSvg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+    .svg-overlay-badge {
+      position: absolute;
+      top: 9px;
+      left: 10px;
+      background: rgba(255, 255, 255, .92);
+      border: 1px solid #d5e0ed;
+      border-radius: 8px;
+      padding: 4px 9px;
+      font-size: .74rem;
+      font-weight: 750;
+      color: var(--navy);
+      backdrop-filter: blur(4px);
+    }
+    .svg-formula-badge {
+      position: absolute;
+      top: 9px;
+      right: 10px;
+      background: var(--blue-soft);
+      border: 1px solid #cce0fa;
+      border-radius: 8px;
+      padding: 4px 9px;
+      font-size: .74rem;
+      font-weight: 750;
+      color: var(--blue);
+    }
+
+    @keyframes matchPop {
+      0% { opacity: 0; stroke-width: 11px; }
+      65% { opacity: 1; stroke-width: 8px; }
+      100% { opacity: 1; stroke-width: 6.2px; }
+    }
+    .match-new {
+      animation: matchPop .32s cubic-bezier(.22, 1, .36, 1) forwards;
+    }
+
+    /* Стрічка послідовності приростів dn */
+    .seq-box {
+      margin-top: 9px;
+      background: #f6f9fd;
+      border: 1px solid #dde6f2;
+      border-radius: 10px;
+      padding: 7px 10px;
+    }
+    .seq-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: .72rem;
+      color: var(--muted);
+      font-weight: 750;
+      margin-bottom: 5px;
+    }
+    .seq-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      max-height: 62px;
+      overflow-y: auto;
+      align-items: center;
+    }
+    .dn-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      height: 21px;
+      padding: 0 5px;
+      border-radius: 5px;
+      font-size: .72rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      border: 1px solid transparent;
+      opacity: .72;
+      transition: transform .12s, opacity .12s;
+    }
+    .dn-chip.d4 { background: var(--gold-soft); color: var(--gold); border-color: #ebd094; }
+    .dn-chip.d3 { background: var(--red-soft); color: var(--red); border-color: #eabbc1; }
+    .dn-chip.d2 { background: var(--teal-soft); color: var(--teal); border-color: #a4d9cf; }
+    .dn-chip.is-past { opacity: .92; }
+    .dn-chip.is-future { opacity: .35; filter: grayscale(.5); }
+    .dn-chip.is-active {
+      opacity: 1;
+      transform: scale(1.16);
+      outline: 2px solid var(--navy);
+      z-index: 2;
+    }
+
+    /* Центральна колонка: Пояснення, змінні, керування */
+    .step-number {
+      color: var(--teal);
+      font-size: .72rem;
+      font-weight: 850;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .step-title {
+      margin: 4px 0 6px;
+      color: var(--navy);
+      font-size: 1.12rem;
+      line-height: 1.22;
+    }
+    .step-text {
+      color: #41546e;
+      margin: 0 0 10px;
+      font-size: .83rem;
+      min-height: 68px;
+    }
+
+    .facts-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+      margin-bottom: 10px;
+    }
+    .fact {
+      background: #f5f8fc;
+      border: 1px solid #e1e9f3;
+      border-radius: 9px;
+      padding: 7px 9px;
+    }
+    .fact span {
+      display: block;
+      color: var(--muted);
+      font-size: .68rem;
+      font-weight: 700;
+    }
+    .fact strong {
+      display: block;
+      color: var(--navy);
+      font-size: 1rem;
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+    .fact.highlight-teal { background: var(--teal-soft); border-color: #bce3db; }
+    .fact.highlight-teal strong { color: var(--teal); }
+    .fact.highlight-red { background: var(--red-soft); border-color: #f0c7cc; }
+    .fact.highlight-red strong { color: var(--red); }
+
+    .code-link {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      background: var(--blue-soft);
+      border: 1px solid #d0e3fb;
+      border-radius: 10px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+      font-size: .78rem;
+    }
+    .code-link b {
+      flex: 0 0 auto;
+      color: var(--blue);
+      font-size: .73rem;
+      white-space: nowrap;
+    }
+    .code-link span { color: #315175; }
+
+    .math-hint-card {
+      background: #f8fafd;
+      border: 1px solid #e2eaf4;
+      border-radius: 10px;
+      padding: 8px 11px;
+      margin-bottom: 10px;
+      font-size: .76rem;
+      color: #4a5d77;
+    }
+    .math-hint-card strong {
+      display: block;
+      color: var(--navy);
+      margin-bottom: 2px;
+      font-size: .79rem;
+    }
+
+    .controls-bottom {
+      margin-top: auto;
+    }
+    .progress-top {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: .74rem;
+      margin-bottom: 4px;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--teal);
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    .nav-buttons {
+      display: grid;
+      grid-template-columns: auto auto 1.2fr 1.2fr auto;
+      gap: 6px;
+    }
+    .nav-buttons .btn { padding: 0 8px; }
+
+    /* Права колонка: Синхронізований код Python */
+    .code-panel {
+      background: #101d2d;
+      border: 1px solid #1e324a;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .code-header {
+      padding: 9px 14px;
+      background: #16273b;
+      border-bottom: 1px solid #233a55;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .code-header strong {
+      color: #eaf2fc;
+      font-size: .83rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    .code-header span {
+      color: #8ea6c4;
+      font-size: .72rem;
+    }
+    pre {
+      margin: 0;
+      padding: 8px 0;
+      overflow: auto;
+      color: #e3ecf7;
+      font-size: .76rem;
+      line-height: 1.46;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      tab-size: 4;
+      flex: 1;
+    }
+    .py-line {
+      display: block;
+      padding: 0 12px;
+      white-space: pre;
+      border-left: 3px solid transparent;
+      transition: background .12s;
+    }
+    .py-line.active-line {
+      background: #203b56;
+      border-left-color: #54c5b2;
+      color: #ffffff;
+      font-weight: 600;
+    }
+    .py-line.py-comment {
+      color: #7c96b4;
+      font-style: italic;
+    }
+    .py-line.active-line.py-comment {
+      color: #b7d3f2;
+    }
+    .line-no {
+      display: inline-block;
+      width: 22px;
+      margin-right: 10px;
+      color: #657f9e;
+      user-select: none;
+      text-align: right;
+    }
+
+    @media (max-width: 1280px) {
+      .workspace {
+        grid-template-columns: 1fr 1fr;
+      }
+      .code-panel {
+        grid-column: 1 / -1;
+      }
+    }
+    @media (max-width: 820px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+      .nav-buttons {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <!-- ВЕРХНЯ ПАНЕЛЬ -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="eyebrow">Комбінаторика · олімпіадні задачі</span>
+        <h1>Задача про сірники: найменша кількість для <code>n</code> квадратів</h1>
+        <span class="subtitle">Спіральна укладка та закономірність приростів +3 і +2</span>
+      </div>
+      <div class="global-controls">
+        <div class="inline-field">
+          <label for="nInput">Кількість квадратів n:</label>
+          <input id="nInput" type="number" min="1" max="65" value="30" />
+          <button class="btn btn-primary" id="applyBtn" type="button" style="height:28px;">Побудувати</button>
+        </div>
+        <div class="preset-group" aria-label="Швидкі приклади">
+          <button class="preset-btn" type="button" data-preset="4">n = 4 (2×2)</button>
+          <button class="preset-btn" type="button" data-preset="9">n = 9 (3×3)</button>
+          <button class="preset-btn" type="button" data-preset="16">n = 16 (4×4)</button>
+          <button class="preset-btn" type="button" data-preset="26">n = 26 (кінець p)</button>
+          <button class="preset-btn" type="button" data-preset="32">n = 32 (цикл + lim↑)</button>
+        </div>
+        <div class="inline-field">
+          <label for="speedSelect">Швидкість:</label>
+          <select id="speedSelect">
+            <option value="1100">Повільно</option>
+            <option value="550" selected>Звичайно</option>
+            <option value="220">Швидко</option>
+          </select>
+        </div>
+      </div>
+    </header>
+
+    <!-- ТРИКОЛОНКОВИЙ РОБОЧИЙ ПРОСТІР -->
+    <section class="workspace">
+      <!-- КОЛОНКА 1: ВІЗУАЛЬНА КОНСТРУКЦІЯ ІЗ СІРНИКІВ -->
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Спіральна побудова квадратів із сірників</h2>
+          <span class="muted-pill" id="gridSummaryLabel">Побудовано: 1 із 30 квадратів</span>
+        </div>
+
+        <div class="legend" aria-label="Кольори сірників">
+          <span><i class="swatch old"></i> уже покладені сірники</span>
+          <span><i class="swatch plus4"></i> +4 (перший квадрат)</span>
+          <span><i class="swatch plus3"></i> +3 (новий виступ/ряд)</span>
+          <span><i class="swatch plus2"></i> +2 (заповнення кута)</span>
+        </div>
+
+        <div class="svg-stage">
+          <div class="svg-overlay-badge" id="svgStageBadge">Квадрат #1 · Усього сірників: 4</div>
+          <div class="svg-formula-badge" id="svgFormulaBadge">Формула: 2n + ⌈2√n⌉ = 4</div>
+          <svg id="matchstickSvg" viewBox="0 0 500 500" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" aria-label="Візуалізація квадратів із сірників"></svg>
+        </div>
+
+        <div class="seq-box">
+          <div class="seq-head">
+            <span>Послідовність приростів <code>dn</code> (скільки сірників додає кожен новий квадрат):</span>
+            <span id="seqModeBadge">Джерело: таблиця p[n]</span>
+          </div>
+          <div class="seq-strip" id="dnStrip"></div>
+        </div>
+      </div>
+
+      <!-- КОЛОНКА 2: ПОЯСНЕННЯ КРОКУ, ЗМІННІ ТА КЕРУВАННЯ -->
+      <aside class="panel" aria-live="polite">
+        <div class="step-number" id="stepNumber">Крок 1 · Старт</div>
+        <h2 class="step-title" id="stepTitle">Перший квадрат (1×1)</h2>
+        <p class="step-text" id="stepText">Будуємо перший одиничний квадрат. Оскільки сірників ще немає, викладаємо всі 4 сторони.</p>
+
+        <div class="facts-grid">
+          <div class="fact"><span>Квадрат i</span><strong id="factI">1</strong></div>
+          <div class="fact"><span>Усього сірників (ans)</span><strong id="factAns">4</strong></div>
+          <div class="fact" id="factDeltaCard"><span>Приріст Δ</span><strong id="factDelta">+4</strong></div>
+          <div class="fact"><span>Двійок підряд (k2 / lim)</span><strong id="factK2Lim">—</strong></div>
+          <div class="fact"><span>Лічильник пар (pair)</span><strong id="factPair">—</strong></div>
+          <div class="fact"><span>Гілка коду</span><strong id="factBranch">p[n]</strong></div>
+        </div>
+
+        <div class="code-link">
+          <b id="codeLineLabel">Python · рядок 2</b>
+          <span id="codeLineHint">Значення для n &lt; 27 уже збережені в попередньо обчисленому списку p.</span>
+        </div>
+
+        <div class="math-hint-card">
+          <strong>Математична підказка: чому з'являються +3 і +2?</strong>
+          Коли фігура є повним квадратом <code>k×k</code> або прямокутником <code>k×(k+1)</code>, новий квадрат доводиться прикладати лише однією стороною — це виступ із <b>+3</b> сірників. Усі наступні квадрати цього ряду лягають у внутрішній кут (торкаються двома сторонами) і потребують лише <b>+2</b> сірники. Замкнена формула: <code>2n + ⌈2√n⌉</code>.
+        </div>
+
+        <div class="controls-bottom">
+          <div class="progress-top">
+            <span id="stepPosition">Крок 1 із 30</span>
+            <strong id="progressLabel">0%</strong>
+          </div>
+          <input id="timelineSlider" type="range" min="0" max="1" value="0" aria-label="Повзунок кроків" />
+          <div class="nav-buttons">
+            <button class="btn btn-light" id="firstBtn" type="button" title="На початок">⟲ Спочатку</button>
+            <button class="btn btn-light" id="prevBtn" type="button">← Назад</button>
+            <button class="btn btn-play" id="playBtn" type="button">▶ Автоматично</button>
+            <button class="btn btn-primary" id="nextBtn" type="button">Наступний крок →</button>
+            <button class="btn btn-light" id="lastBtn" type="button" title="До результату">До результату ⇥</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- КОЛОНКА 3: СИНХРОНІЗОВАНИЙ КОД PYTHON -->
+      <div class="code-panel">
+        <div class="code-header">
+          <strong>matchsticks.py — ваш алгоритм</strong>
+          <span id="codeHeaderMode">Таблиця p + генератор циклу</span>
+        </div>
+        <pre aria-label="Код Python"><code id="pythonCode"></code></pre>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Початковий масив із коду користувача (індекси 0..26)
+    const P_TABLE = [0, 4, 7, 10, 12, 15, 17, 20, 22, 24, 27, 29, 31, 34, 36, 38, 40, 43, 45, 47, 49, 52, 54, 56, 58, 60, 63];
+
+    // Точний код користувача з пронумерованими рядками
+    const pythonSource = [
+      'p = [0,4,7,10,12,15,17,20,22,24,27,29,31,34,36,38,40,43,45,47,49,52,54,56,58,60,63]',
+      '',
+      'n = int(input())',
+      'if (n > 0) and (n < len(p)):',
+      '    print(p[n])',
+      'else:',
+      '    for i in range(len(p), n + 1):',
+      '        if i == len(p):',
+      '            ans = 63',
+      '            k2 = 0    # скільки двійок поклали підряд',
+      '            lim = 4   # скільки двійок має йти підряд',
+      '            pair = 1  # одна четвірка двійок вже була',
+      '',
+      '        if k2 < lim:',
+      '            ans = ans + 2   # додаємо двійку (заповнюємо кут)',
+      '            k2 = k2 + 1',
+      '        else:',
+      '            ans += 3        # додаємо трійку (новий виступ)',
+      '            k2 = 0',
+      '            pair += 1',
+      '            if pair == 2:',
+      '                lim += 1',
+      '                pair = 0',
+      '    print(ans if n > 0 else 0)'
+    ];
+
+    const lineHints = {
+      1: 'Готовий список відповідей для n від 0 до 26 (перші 26 квадратів).',
+      4: 'Перевіряємо, чи є відповідь для n у попередньо обчисленому списку p.',
+      5: 'Число n < 27 — миттєво беремо готову відповідь p[n] за O(1)!',
+      7: 'n ≥ 27 виходить за межі таблиці p — продовжуємо послідовність у циклі.',
+      9: 'Ініціалізуємо стан після 26-го квадрата: ans = 63, k2 = 0, lim = 4, pair = 1.',
+      14: 'Перевіряємо умову k2 < lim: чи ще не заповнили поточну сторону двійками?',
+      15: 'Додаємо +2 сірники (новий квадрат стає у внутрішній кут) і збільшуємо k2.',
+      18: 'Усі lim двійок покладено! Починаємо новий ряд/стовпець виступом (+3 сірники).',
+      21: 'Двічі поклали по lim двійок (pair == 2) — сторона виросла, тож lim збільшується на 1!',
+      24: 'Цикл завершено — виводимо знайдену мінімальну кількість сірників ans.'
+    };
+
+    const el = (id) => document.getElementById(id);
+
+    let targetN = 30;
+    let coordinates = [];
+    let timeline = [];
+    let position = 0;
+    let timer = null;
+
+    // Генерує координати (gx, gy) одиничних квадратів по оптимальній спіралі,
+    // що розширює прямокутник 1x1 -> 1x2 -> 2x2 -> 2x3 -> 3x3 -> 3x4 -> 4x4 ...
+    function generateOptimalSquareCoords(count) {
+      const cells = [{ gx: 0, gy: 0 }];
+      let minX = 0, maxX = 0, minY = 0, maxY = 0;
+      let dir = 0; // 0: праворуч, 1: вниз, 2: ліворуч, 3: вгору
+
+      while (cells.length < count) {
+        if (dir === 0) {
+          // Новий стовпець праворуч (x = maxX + 1), заповнюємо зверху вниз (minY .. maxY)
+          const x = maxX + 1;
+          for (let y = minY; y <= maxY && cells.length < count; y++) {
+            cells.push({ gx: x, gy: y });
+          }
+          maxX = x;
+        } else if (dir === 1) {
+          // Новий рядок знизу (y = maxY + 1), заповнюємо справа наліво (maxX .. minX)
+          const y = maxY + 1;
+          for (let x = maxX; x >= minX && cells.length < count; x--) {
+            cells.push({ gx: x, gy: y });
+          }
+          maxY = y;
+        } else if (dir === 2) {
+          // Новий стовпець ліворуч (x = minX - 1), заповнюємо знизу вгору (maxY .. minY)
+          const x = minX - 1;
+          for (let y = maxY; y >= minY && cells.length < count; y--) {
+            cells.push({ gx: x, gy: y });
+          }
+          minX = x;
+        } else {
+          // Новий рядок зверху (y = minY - 1), заповнюємо зліва направо (minX .. maxX)
+          const y = minY - 1;
+          for (let x = minX; x <= maxX && cells.length < count; x++) {
+            cells.push({ gx: x, gy: y });
+          }
+          minY = y;
+        }
+        dir = (dir + 1) % 4;
+      }
+      return cells;
+    }
+
+    // Будує покрокову історію виконання точно за алгоритмом користувача
+    function buildTimeline(n) {
+      coordinates = generateOptimalSquareCoords(n);
+      const events = [];
+
+      // Допоміжний трекер для синхронного відображення k2, lim, pair навіть на перших 26 кроках
+      let simAns = 0;
+      let simK2 = 0;
+      let simLim = 1;
+      let simPair = 1;
+
+      for (let i = 1; i <= n; i++) {
+        let delta = 0;
+        let line = 5;
+        let title = '';
+        let text = '';
+        let limIncreased = false;
+
+        if (i === 1) {
+          delta = 4;
+          simAns = 4;
+          simK2 = 0;
+          simLim = 1;
+          simPair = 1;
+          line = i < P_TABLE.length ? 5 : 9;
+          title = 'Квадрат #1: викладаємо 4 сірники';
+          text = 'Починаємо з першого квадрата 1×1. Попередніх сторін немає, тому кладемо всі 4 сірники (ans = 4).';
+        } else if (i < P_TABLE.length) {
+          // Йдемо по попередньо обчисленій таблиці p[1..26], але відстежуємо геометричну закономірність
+          const prevAns = P_TABLE[i - 1];
+          simAns = P_TABLE[i];
+          delta = simAns - prevAns;
+
+          if (delta === 2) {
+            simK2 += 1;
+          } else {
+            simK2 = 0;
+            simPair += 1;
+            if (simPair === 2) {
+              simLim += 1;
+              simPair = 0;
+              limIncreased = true;
+            }
+          }
+
+          line = 5;
+          if (delta === 3) {
+            title = `Квадрат #${i}: новий виступ (+3 сірники)`;
+            text = `Попередня фігура була завершеним прямокутником/квадратом. Приєднуємо квадрат #${i} до однієї сторони (+3 сірники). У таблиці p[${i}] = ${simAns}.`;
+          } else {
+            title = `Квадрат #${i}: заповнюємо кут (+2 сірники)`;
+            text = `Квадрат #${i} стає у внутрішній кут і використовує 2 вже покладені сірники, тому додаємо лише +2. У таблиці p[${i}] = ${simAns}.`;
+          }
+        } else {
+          // i >= 27: працюємо всередині циклу for i in range(len(p), n + 1)
+          if (i === P_TABLE.length) {
+            simAns = 63;
+            simK2 = 0;
+            simLim = 4;
+            simPair = 1;
+          }
+
+          if (simK2 < simLim) {
+            delta = 2;
+            simAns += 2;
+            simK2 += 1;
+            line = 15;
+            title = `Квадрат #${i}: цикл додає +2 сірники`;
+            text = `Умова k2 < lim виконується (${simK2 - 1} < ${simLim}): заповнюємо внутрішній кут уздовж сторони (+2 сірники). Тепер k2 = ${simK2}, ans = ${simAns}.`;
+          } else {
+            delta = 3;
+            simAns += 3;
+            simK2 = 0;
+            simPair += 1;
+            line = 18;
+            if (simPair === 2) {
+              simLim += 1;
+              simPair = 0;
+              limIncreased = true;
+              line = 21;
+              title = `Квадрат #${i}: виступ (+3) та ріст lim → ${simLim}`;
+              text = `Поклали +3 сірники для нового виступу. Оскільки pair досяг 2, периметр виріс настільки, що тепер підряд йтиме lim = ${simLim} двійок!`;
+            } else {
+              title = `Квадрат #${i}: новий виступ (+3 сірники)`;
+              text = `Усі ${simLim} двійок уже використано (k2 == lim). Починаємо новий бік виступом із +3 сірників, скидаємо k2 = 0, pair = ${simPair}.`;
+            }
+          }
+        }
+
+        // Якщо це останній крок n >= 27, додатково підсвічуємо фінальний рядок виводу або залишаємо крок обчислення
+        events.push({
+          i,
+          ans: simAns,
+          delta,
+          k2: simK2,
+          lim: simLim,
+          pair: simPair,
+          limIncreased,
+          inTable: i < P_TABLE.length,
+          line: (i === n && i >= P_TABLE.length) ? 24 : line,
+          title,
+          text
+        });
+      }
+
+      return events;
+    }
+
+    function renderPython() {
+      el('pythonCode').innerHTML = pythonSource.map((line, index) => {
+        const number = index + 1;
+        const safe = line.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+        const isComment = line.trim().startsWith('#');
+        return `<span class="py-line${isComment ? ' py-comment' : ''}" data-line="${number}"><span class="line-no">${number}</span>${safe || ' '}</span>`;
+      }).join('');
+    }
+
+    // Рендерить SVG-сітку сірників для перших `count` квадратів із підсвіткою нового квадрата
+    function renderMatchstickSvg(count, delta) {
+      const svg = el('matchstickSvg');
+      const activeCells = coordinates.slice(0, count);
+
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      for (const c of activeCells) {
+        if (c.gx < minX) minX = c.gx;
+        if (c.gx > maxX) maxX = c.gx;
+        if (c.gy < minY) minY = c.gy;
+        if (c.gy > maxY) maxY = c.gy;
+      }
+
+      const cols = maxX - minX + 1;
+      const rows = maxY - minY + 1;
+      const maxDim = Math.max(cols, rows, 2);
+
+      // Фіксована координатна сітка 100 од. на клітинку + автоматичний viewBox під точні габарити
+      const cellSize = 100;
+      const strokeW = Math.max(5.5, Math.min(12, (cellSize * 0.14) * (4 / Math.max(3, maxDim * 0.85))));
+      const headR = strokeW * 0.78;
+      const pad = Math.max(24, headR * 2.5 + strokeW);
+
+      const contentW = cols * cellSize;
+      const contentH = rows * cellSize;
+      const vbW = contentW + pad * 2;
+      const vbH = contentH + pad * 2;
+
+      svg.setAttribute('viewBox', `0 0 ${vbW.toFixed(1)} ${vbH.toFixed(1)}`);
+      svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+      // Збираємо всі унікальні ребра (сірники) попередніх квадратів
+      const existingEdges = new Set();
+      const edgeKey = (x1, y1, x2, y2) => {
+        // Роздільник не повинен конфліктувати з мінусом у від'ємних координатах.
+        if (x1 > x2 || (x1 === x2 && y1 > y2)) return `${x2},${y2}|${x1},${y1}`;
+        return `${x1},${y1}|${x2},${y2}`;
+      };
+
+      for (let idx = 0; idx < count - 1; idx++) {
+        const { gx, gy } = activeCells[idx];
+        existingEdges.add(edgeKey(gx, gy, gx + 1, gy));
+        existingEdges.add(edgeKey(gx, gy + 1, gx + 1, gy + 1));
+        existingEdges.add(edgeKey(gx, gy, gx, gy + 1));
+        existingEdges.add(edgeKey(gx + 1, gy, gx + 1, gy + 1));
+      }
+
+      const lastCell = activeCells[count - 1];
+      const lastCellEdges = [
+        [lastCell.gx, lastCell.gy, lastCell.gx + 1, lastCell.gy],
+        [lastCell.gx, lastCell.gy + 1, lastCell.gx + 1, lastCell.gy + 1],
+        [lastCell.gx, lastCell.gy, lastCell.gx, lastCell.gy + 1],
+        [lastCell.gx + 1, lastCell.gy, lastCell.gx + 1, lastCell.gy + 1]
+      ];
+
+      const newEdges = [];
+      for (const [x1, y1, x2, y2] of lastCellEdges) {
+        const k = edgeKey(x1, y1, x2, y2);
+        if (!existingEdges.has(k)) {
+          newEdges.push([x1, y1, x2, y2]);
+        }
+      }
+
+      // Малюємо заливку клітинок та номери квадратів
+      let squaresMarkup = '';
+      for (let idx = 0; idx < activeCells.length; idx++) {
+        const c = activeCells[idx];
+        const px = pad + (c.gx - minX) * cellSize;
+        const py = pad + (c.gy - minY) * cellSize;
+        const isLast = idx === activeCells.length - 1;
+
+        let fill = 'rgba(255, 255, 255, 0.72)';
+        if (isLast) {
+          fill = delta === 4 ? 'rgba(217, 138, 22, 0.16)'
+               : delta === 3 ? 'rgba(183, 74, 85, 0.15)'
+               : 'rgba(19, 133, 121, 0.16)';
+        }
+
+        const insetBox = Math.max(4, strokeW * 0.55);
+        const matchCount = 2 * (idx + 1) + Math.ceil(2 * Math.sqrt(idx + 1));
+        const countFontSize = matchCount >= 100 ? 27 : matchCount >= 10 ? 31 : 35;
+        const textColor = isLast
+          ? (delta === 4 ? '#9e620b' : delta === 3 ? '#a63b46' : '#0f7368')
+          : '#788ba3';
+        const badgeX = px + 8;
+        const badgeY = py + 8;
+        const badgeWidth = 31;
+        const badgeHeight = 19;
+
+        squaresMarkup += `
+          <rect x="${px + insetBox}" y="${py + insetBox}" width="${cellSize - insetBox * 2}" height="${cellSize - insetBox * 2}" rx="10" fill="${fill}" />
+          <g>
+            <title>Квадрат №${idx + 1}. Усього сірників після його додавання: ${matchCount}</title>
+            <rect x="${badgeX}" y="${badgeY}" width="${badgeWidth}" height="${badgeHeight}" rx="6"
+                  fill="#eaf0f7" stroke="#d5e0ed" stroke-width="0.8" />
+            <text x="${badgeX + badgeWidth / 2}" y="${badgeY + 13.5}" text-anchor="middle"
+                  font-size="11" font-weight="800" fill="#60748e">${idx + 1}</text>
+            <text x="${px + cellSize / 2}" y="${py + cellSize / 2 + countFontSize * 0.34}" text-anchor="middle"
+                  font-size="${countFontSize}" font-weight="850" fill="${textColor}">${matchCount}</text>
+          </g>
+        `;
+      }
+
+      // Функція малювання одного сірника з голівкою
+      const drawStick = (x1, y1, x2, y2, stickColor, headColor, isNew) => {
+        const sx1 = pad + (x1 - minX) * cellSize;
+        const sy1 = pad + (y1 - minY) * cellSize;
+        const sx2 = pad + (x2 - minX) * cellSize;
+        const sy2 = pad + (y2 - minY) * cellSize;
+
+        const inset = cellSize * 0.13;
+        const isHoriz = sy1 === sy2;
+        const ax1 = isHoriz ? sx1 + inset : sx1;
+        const ay1 = isHoriz ? sy1 : sy1 + inset;
+        const ax2 = isHoriz ? sx2 - inset : sx2;
+        const ay2 = isHoriz ? sy2 : sy2 - inset;
+
+        return `
+          <g class="${isNew ? 'match-new' : ''}">
+            <line x1="${ax1}" y1="${ay1}" x2="${ax2}" y2="${ay2}"
+                  stroke="${stickColor}" stroke-width="${strokeW.toFixed(2)}" stroke-linecap="round" />
+            <circle cx="${ax2}" cy="${ay2}" r="${headR.toFixed(2)}" fill="${headColor}" />
+          </g>
+        `;
+      };
+
+      let sticksMarkup = '';
+      for (const k of existingEdges) {
+        const [p1, p2] = k.split('|');
+        const [x1, y1] = p1.split(',').map(Number);
+        const [x2, y2] = p2.split(',').map(Number);
+        sticksMarkup += drawStick(x1, y1, x2, y2, '#c89249', '#8e3b3e', false);
+      }
+
+      const newStickColor = delta === 4 ? '#d98a16' : delta === 3 ? '#c94a4a' : '#138579';
+      const newHeadColor = delta === 4 ? '#8a5205' : delta === 3 ? '#7c1d24' : '#094d46';
+      for (const [x1, y1, x2, y2] of newEdges) {
+        sticksMarkup += drawStick(x1, y1, x2, y2, newStickColor, newHeadColor, true);
+      }
+
+      // Вузлові точки перетину
+      let jointsMarkup = '';
+      const drawnNodes = new Set();
+      const jointR = Math.max(2.6, strokeW * 0.34);
+      for (const c of activeCells) {
+        for (const [nx, ny] of [[c.gx, c.gy], [c.gx + 1, c.gy], [c.gx, c.gy + 1], [c.gx + 1, c.gy + 1]]) {
+          const nk = `${nx},${ny}`;
+          if (drawnNodes.has(nk)) continue;
+          drawnNodes.add(nk);
+          const jx = pad + (nx - minX) * cellSize;
+          const jy = pad + (ny - minY) * cellSize;
+          jointsMarkup += `<circle cx="${jx}" cy="${jy}" r="${jointR.toFixed(1)}" fill="#9fb0c7" opacity="0.6" />`;
+        }
+      }
+
+      svg.innerHTML = squaresMarkup + jointsMarkup + sticksMarkup;
+    }
+
+    function render() {
+      const ev = timeline[position];
+
+      renderMatchstickSvg(ev.i, ev.delta);
+
+      el('gridSummaryLabel').textContent = `Побудовано: ${ev.i} із ${targetN} квадратів`;
+      el('svgStageBadge').textContent = `Квадрат #${ev.i} · Усього сірників: ${ev.ans}`;
+      const formulaCheck = 2 * ev.i + Math.ceil(2 * Math.sqrt(ev.i));
+      el('svgFormulaBadge').textContent = `2n + ⌈2√n⌉ = ${formulaCheck}`;
+
+      // Стрічка приростів dn
+      el('dnStrip').innerHTML = timeline.map((stepEv, idx) => {
+        const clsType = stepEv.delta === 4 ? 'd4' : stepEv.delta === 3 ? 'd3' : 'd2';
+        let stateCls = 'is-future';
+        if (idx < position) stateCls = 'is-past';
+        else if (idx === position) stateCls = 'is-active';
+        return `<span class="dn-chip ${clsType} ${stateCls}" title="Квадрат #${stepEv.i}: +${stepEv.delta} (усього ${stepEv.ans})">+${stepEv.delta}</span>`;
+      }).join('');
+
+      const activeChip = el('dnStrip').querySelector('.is-active');
+      if (activeChip) {
+        activeChip.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+
+      el('seqModeBadge').textContent = ev.inTable
+        ? `Джерело: таблиця p[${ev.i}]`
+        : `Джерело: цикл for (i = ${ev.i})`;
+
+      // Права інформаційна панель
+      el('stepNumber').textContent = `${ev.i === targetN ? 'Фінал' : 'Побудова'} · крок ${position + 1} із ${timeline.length}`;
+      el('stepTitle').textContent = ev.title;
+      el('stepText').textContent = ev.text;
+
+      el('factI').textContent = ev.i;
+      el('factAns').textContent = ev.ans;
+      el('factDelta').textContent = `+${ev.delta}`;
+
+      const deltaCard = el('factDeltaCard');
+      deltaCard.classList.remove('highlight-teal', 'highlight-red');
+      if (ev.delta === 2) deltaCard.classList.add('highlight-teal');
+      else if (ev.delta === 3) deltaCard.classList.add('highlight-red');
+
+      el('factK2Lim').textContent = `${ev.k2} / ${ev.lim}`;
+      el('factPair').textContent = `${ev.pair} / 2`;
+      el('factBranch').textContent = ev.inTable ? `p[${ev.i}]` : 'for-цикл';
+
+      el('codeLineLabel').textContent = `Python · рядок ${ev.line}`;
+      el('codeLineHint').textContent = lineHints[ev.line] || 'Виконується крок алгоритму.';
+      el('codeHeaderMode').textContent = ev.inTable
+        ? `n = ${ev.i} < 27 → гілка if`
+        : `n = ${ev.i} ≥ 27 → гілка else (цикл)`;
+
+      document.querySelectorAll('.py-line').forEach(line => {
+        line.classList.toggle('active-line', Number(line.dataset.line) === ev.line);
+      });
+
+      const maxPos = timeline.length - 1;
+      el('timelineSlider').max = maxPos;
+      el('timelineSlider').value = position;
+      el('stepPosition').textContent = `Крок ${position + 1} із ${timeline.length}`;
+      el('progressLabel').textContent = `${Math.round((position / Math.max(1, maxPos)) * 100)}%`;
+
+      el('firstBtn').disabled = position === 0;
+      el('prevBtn').disabled = position === 0;
+      el('nextBtn').disabled = position === maxPos;
+      el('lastBtn').disabled = position === maxPos;
+      el('playBtn').disabled = position === maxPos;
+    }
+
+    function stopAuto() {
+      if (timer !== null) {
+        clearInterval(timer);
+        timer = null;
+      }
+      el('playBtn').textContent = '▶ Автоматично';
+    }
+
+    function goTo(nextPos) {
+      position = Math.max(0, Math.min(timeline.length - 1, nextPos));
+      render();
+      if (position === timeline.length - 1) stopAuto();
+    }
+
+    function toggleAuto() {
+      if (timer !== null) {
+        stopAuto();
+        return;
+      }
+      if (position >= timeline.length - 1) return;
+      el('playBtn').textContent = 'Ⅱ Пауза';
+      timer = setInterval(() => {
+        if (position < timeline.length - 1) goTo(position + 1);
+        else stopAuto();
+      }, Number(el('speedSelect').value));
+    }
+
+    function resetWithN(customVal) {
+      stopAuto();
+      const input = el('nInput');
+      let val = customVal !== undefined ? customVal : Number.parseInt(input.value, 10);
+      if (!Number.isFinite(val)) val = 30;
+      val = Math.max(1, Math.min(65, val));
+      input.value = val;
+      targetN = val;
+
+      timeline = buildTimeline(targetN);
+      position = 0;
+      render();
+    }
+
+    // Обробники подій
+    el('applyBtn').addEventListener('click', () => resetWithN());
+    el('nInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') resetWithN();
+    });
+
+    document.querySelectorAll('[data-preset]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        resetWithN(Number(btn.dataset.preset));
+      });
+    });
+
+    el('firstBtn').addEventListener('click', () => { stopAuto(); goTo(0); });
+    el('prevBtn').addEventListener('click', () => { stopAuto(); goTo(position - 1); });
+    el('nextBtn').addEventListener('click', () => { stopAuto(); goTo(position + 1); });
+    el('lastBtn').addEventListener('click', () => { stopAuto(); goTo(timeline.length - 1); });
+    el('playBtn').addEventListener('click', toggleAuto);
+
+    el('speedSelect').addEventListener('change', () => {
+      if (timer !== null) {
+        stopAuto();
+        toggleAuto();
+      }
+    });
+
+    el('timelineSlider').addEventListener('input', (e) => {
+      stopAuto();
+      goTo(Number(e.target.value));
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(document.activeElement.tagName)) return;
+      if (e.key === 'ArrowRight') { stopAuto(); goTo(position + 1); }
+      if (e.key === 'ArrowLeft') { stopAuto(); goTo(position - 1); }
+      if (e.code === 'Space') { e.preventDefault(); toggleAuto(); }
+    });
+
+    // Старт
+    renderPython();
+    resetWithN(30);
+  </script>
+</body>
+</html>
