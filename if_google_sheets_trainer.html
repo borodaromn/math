@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тренажер формули IF — Google Таблиці</title>
+<style>
+:root{
+  --bg:#f3f6fb;--panel:#fff;--ink:#18243a;--muted:#65738b;--line:#dce4ef;
+  --blue:#2563eb;--blue-soft:#eaf1ff;--green:#16834a;--green-soft:#e7f7ee;
+  --red:#c2413a;--red-soft:#fff0ee;--amber:#a76508;--amber-soft:#fff6df;
+  --shadow:0 12px 34px rgba(31,52,84,.08);--radius:18px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#edf3fc 0,#f7f9fc 260px,var(--bg) 100%);color:var(--ink);font:15px/1.5 Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+button,input{font:inherit}
+button{cursor:pointer}
+.shell{max-width:1120px;margin:0 auto;padding:28px 22px 48px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:22px}
+.brand{display:flex;align-items:center;gap:13px}
+.logo{width:46px;height:46px;border-radius:14px;background:#1f9d62;color:#fff;display:grid;place-items:center;font-weight:800;font-size:21px;box-shadow:0 7px 16px #16834a33}
+.eyebrow{color:var(--blue);font-size:11px;letter-spacing:.12em;font-weight:800;text-transform:uppercase;margin-bottom:3px}
+h1{font-size:clamp(22px,3vw,31px);line-height:1.15;margin:0;letter-spacing:-.035em}
+.top-note{font-size:13px;color:var(--muted);text-align:right}
+.progress-wrap{background:#e4eaf3;height:7px;border-radius:20px;overflow:hidden;margin:0 0 15px}
+.progress{height:100%;width:25%;background:linear-gradient(90deg,#2563eb,#20a76a);border-radius:20px;transition:width .25s}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:22px}
+.tab{border:1px solid var(--line);background:#ffffffb8;color:#66748a;border-radius:13px;padding:11px 12px;text-align:left;display:flex;align-items:center;gap:10px;transition:.2s}
+.tab:hover{border-color:#9db8e8;background:#fff}
+.tab.active{background:#fff;border-color:#8eb0ed;color:var(--ink);box-shadow:0 5px 16px #224d8c12}
+.tab .num{width:27px;height:27px;flex:0 0 27px;border-radius:9px;background:#edf1f7;display:grid;place-items:center;font-size:12px;font-weight:800}
+.tab.active .num{background:var(--blue);color:white}
+.tab.done .num{background:var(--green-soft);color:var(--green)}
+.tab-title{font-size:13px;font-weight:750;line-height:1.2}
+.tab-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.page{display:none;animation:appear .25s ease}
+.page.active{display:block}
+@keyframes appear{from{opacity:.35;transform:translateY(5px)}to{opacity:1;transform:none}}
+.hero,.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.hero{padding:28px 30px;margin-bottom:17px;display:grid;grid-template-columns:1.2fr .8fr;gap:25px;align-items:center}
+.hero h2{margin:0 0 9px;font-size:26px;line-height:1.2;letter-spacing:-.03em}
+.hero p{margin:0;color:var(--muted);max-width:650px}
+.kicker{display:inline-flex;align-items:center;gap:7px;color:var(--blue);font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:9px}
+.big-icon{justify-self:end;width:150px;height:120px;border-radius:22px;background:linear-gradient(135deg,#e8f0ff,#e4f8ee);display:grid;place-items:center;font-size:55px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{padding:22px;margin-bottom:16px;box-shadow:0 6px 20px rgba(31,52,84,.045)}
+.card h3{margin:0 0 10px;font-size:18px;letter-spacing:-.02em}
+.card p{margin:7px 0;color:var(--muted)}
+.formula{background:#101c2e;color:#e9f1ff;border-radius:12px;padding:14px 16px;font:600 14px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}
+.formula .fn{color:#8fc3ff}.formula .arg{color:#a6e7bd}.formula .str{color:#ffd38d}
+.note{border-radius:12px;padding:12px 14px;background:var(--blue-soft);color:#294b86;font-size:13px;margin-top:12px}
+.note.green{background:var(--green-soft);color:#17643c}.note.amber{background:var(--amber-soft);color:#81510d}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:15px}
+.step{border:1px solid var(--line);border-radius:13px;padding:13px;background:#fbfcfe}
+.step b{display:block;font-size:13px;margin:4px 0}.step span{font-size:12px;color:var(--muted)}
+.step .stepnum{width:23px;height:23px;border-radius:8px;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font-size:12px;font-weight:800}
+.section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:15px;margin-bottom:12px}
+.section-head h3{margin:0;font-size:19px}.section-head p{margin:3px 0 0;color:var(--muted);font-size:13px}
+.controls{display:flex;align-items:end;gap:13px;flex-wrap:wrap;margin:13px 0 17px}
+.control{display:flex;flex-direction:column;gap:5px;min-width:145px}
+.control label{font-size:12px;font-weight:750;color:#52627a}
+.control input{width:100%;border:1px solid #cbd6e5;border-radius:10px;padding:10px 12px;color:var(--ink);background:#fff;outline:none}
+.control input:focus,.answer-input:focus{border-color:#79a4f1;box-shadow:0 0 0 3px #2563eb18}
+.range-row{display:flex;align-items:center;gap:10px}.range-row input[type=range]{accent-color:var(--blue);padding:0;box-shadow:none}.range-row output{font-weight:800;min-width:24px}
+.result-box{border-radius:13px;padding:15px 17px;background:#f4f7fc;border:1px solid var(--line);margin-top:13px;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.result-box .small{font-size:12px;color:var(--muted);font-weight:700}.result-box strong{display:block;font-size:20px;margin-top:2px}.pill{padding:6px 10px;border-radius:30px;font-size:12px;font-weight:800}.pill.yes{background:var(--green-soft);color:var(--green)}.pill.no{background:var(--red-soft);color:var(--red)}
+.flow-wrap{background:#f9fbfe;border:1px solid var(--line);border-radius:15px;padding:19px 14px 16px;overflow:hidden}
+.flow-title{font-size:12px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin:0 0 14px 5px}
+.flowchart{max-width:700px;margin:0 auto;text-align:center}
+.flow-node{display:inline-flex;justify-content:center;align-items:center;min-height:44px;padding:10px 15px;border:1.5px solid #bdc9d9;border-radius:11px;background:#fff;font-size:13px;font-weight:750;max-width:100%}
+.flow-node.start{border-radius:24px;background:#edf3ff;border-color:#a9c2ee;color:#2b4f8e}
+.flow-node.decision{border-radius:12px;background:#fff7e4;border-color:#e6c477;min-width:190px}
+.flow-node.out{min-width:145px}
+.stem{height:20px;width:2px;background:#c5d0df;margin:0 auto}
+.branch-row{display:grid;grid-template-columns:1fr 1fr;gap:26px;position:relative;max-width:590px;margin:0 auto}
+.branch-row:before{content:"";position:absolute;top:0;left:25%;right:25%;height:2px;background:#c5d0df}
+.branch{position:relative;padding-top:20px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.branch:before{content:"";position:absolute;top:0;height:20px;width:2px;background:#c5d0df}
+.branch-label{font-size:11px;font-weight:900;letter-spacing:.1em;padding:3px 9px;border-radius:20px;background:#eef1f6;color:#78859a}
+.branch.yes.active .branch-label{background:var(--green-soft);color:var(--green)}
+.branch.no.active .branch-label{background:var(--red-soft);color:var(--red)}
+.branch.active .flow-node{border-width:2px;box-shadow:0 0 0 4px #16834a12}
+.branch.no.active .flow-node{box-shadow:0 0 0 4px #c2413a12}
+.branch.yes.active .flow-node{border-color:#69bd8b;background:#f0fbf4}
+.branch.no.active .flow-node{border-color:#e39a94;background:#fff6f5}
+.flow-foot{font-size:12px;color:var(--muted);margin-top:13px;text-align:center}
+.substitution{margin-top:14px;background:#f3f6fa;border:1px dashed #cbd6e5;border-radius:11px;padding:12px 14px;font:13px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}
+.substitution b{font-family:inherit;color:#596a83;font-size:11px;display:block;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.editor{margin-top:16px;padding:17px;border-radius:14px;border:1px solid #d7e1ed;background:#fbfcff}
+.editor label{display:block;font-size:13px;font-weight:800;margin-bottom:7px}
+.editor-row{display:flex;gap:9px;align-items:stretch}
+.answer-input{width:100%;min-width:0;border:1px solid #cbd6e5;border-radius:10px;padding:11px 12px;background:#fff;color:var(--ink);font:13px ui-monospace,SFMono-Regular,Consolas,monospace;outline:none}
+.btn{border:0;border-radius:10px;padding:10px 15px;background:var(--blue);color:#fff;font-weight:800;font-size:13px;white-space:nowrap;box-shadow:0 4px 10px #2563eb25;transition:.15s}
+.btn:hover{filter:brightness(.96);transform:translateY(-1px)}.btn.secondary{background:#eaf0f8;color:#34445e;box-shadow:none}.btn.green{background:#16834a;box-shadow:0 4px 10px #16834a22}
+.feedback{font-size:13px;margin-top:9px;min-height:20px}.feedback.ok{color:var(--green);font-weight:750}.feedback.bad{color:var(--red)}
+.hint{display:none;margin-top:9px;color:#76500f;background:#fff6df;border-radius:9px;padding:9px 11px;font-size:12px}.hint.show{display:block}
+.nav-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:20px;gap:10px}
+.nav-bottom .btn{min-width:120px}
+.choice-list{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 16px}
+.choice{border:1px solid var(--line);border-radius:10px;background:#fff;padding:9px 12px;color:#52627a;font-weight:750;font-size:12px}
+.choice.active{border-color:#8db0ec;background:var(--blue-soft);color:#234b91}
+.two-branch-explain{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.explain-card{border-radius:12px;padding:12px 13px;border:1px solid var(--line);background:#fff}.explain-card b{display:block;font-size:12px;margin-bottom:3px}.explain-card span{font-size:12px;color:var(--muted)}
+.nested-flow{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;max-width:760px;margin:0 auto}
+.nested-side{border:1px solid var(--line);border-radius:13px;background:#fff;padding:13px;text-align:center}
+.nested-side.active{border:2px solid #6ebc8e;background:#f5fcf7}
+.nested-side.inactive{opacity:.6}
+.nested-side .branch-label{display:inline-block;margin-bottom:8px}
+.nested-side .flow-node{margin:5px auto;display:flex;width:fit-content}
+.nested-caption{font-size:11px;color:var(--muted);margin:5px 0}
+.examples-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.example-card{border:1px solid var(--line);border-radius:13px;padding:13px;background:#fff;text-align:left;transition:.15s}
+.example-card:hover{border-color:#9bb8e8;transform:translateY(-1px)}.example-card.active{border-color:#7ca5eb;background:#f5f8ff;box-shadow:0 0 0 2px #2563eb0d}
+.example-card strong{display:block;font-size:13px}.example-card span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.example-detail{margin-top:15px}
+.footer{margin-top:20px;text-align:center;color:#8a96a8;font-size:11px}
+@media(max-width:760px){.shell{padding:18px 13px 32px}.top{align-items:flex-start}.top-note{display:none}.tabs{grid-template-columns:repeat(2,1fr)}.hero{grid-template-columns:1fr;padding:22px}.big-icon{display:none}.grid2{grid-template-columns:1fr}.steps{grid-template-columns:1fr}.branch-row{gap:10px}.flow-node{font-size:11px;padding:9px}.examples-grid{grid-template-columns:1fr}.nested-flow{grid-template-columns:1fr}.editor-row{flex-direction:column}.editor-row .btn{width:100%}}
+@media(max-width:420px){.tab{padding:9px 8px;gap:7px}.tab-sub{display:none}.branch-row{gap:3px}.branch .flow-node{min-width:0;width:100%;padding:8px 4px}.flow-wrap{padding:15px 8px}.control{min-width:125px;flex:1}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="brand">
+      <div class="logo">IF</div>
+      <div><div class="eyebrow">Google Таблиці · інтерактивний тренажер</div><h1>Формула розгалуження IF</h1></div>
+    </div>
+    <div class="top-note">Навчайся на прикладах<br>і перевіряй себе</div>
+  </header>
+  <div class="progress-wrap"><div class="progress" id="progress"></div></div>
+  <nav class="tabs" aria-label="Сторінки тренажера">
+    <button class="tab active" data-page="0"><span class="num">1</span><span><span class="tab-title">Навіщо IF?</span><span class="tab-sub">Ідея розгалуження</span></span></button>
+    <button class="tab" data-page="1"><span class="num">2</span><span><span class="tab-title">Проста умова</span><span class="tab-sub">Підстановка значень</span></span></button>
+    <button class="tab" data-page="2"><span class="num">3</span><span><span class="tab-title">Складніша формула</span><span class="tab-sub">Обчислення та вкладення</span></span></button>
+    <button class="tab" data-page="3"><span class="num">4</span><span><span class="tab-title">Практичні приклади</span><span class="tab-sub">Де застосовувати IF</span></span></button>
+  </nav>
+
+  <!-- PAGE 1 -->
+  <section class="page active" id="page0">
+    <div class="hero">
+      <div>
+        <div class="kicker">● Сторінка 1 · знайомство</div>
+        <h2>Таблиця може не лише рахувати, а й приймати рішення</h2>
+        <p>Функція <b>IF</b> (умовне розгалуження) перевіряє умову. Якщо вона правильна — повертає один результат, якщо неправильна — інший. Це схоже на запитання, на яке можна відповісти лише «Так» або «Ні».</p>
+      </div>
+      <div class="big-icon" aria-hidden="true">⑂</div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Для чого це потрібно?</h3>
+        <p>Уявімо список учнів і кількість набраних балів. Потрібно автоматично визначити, хто склав тест.</p>
+        <div class="steps">
+          <div class="step"><span class="stepnum">1</span><b>Перевірити</b><span>Чи набрав учень 10 або більше балів?</span></div>
+          <div class="step"><span class="stepnum">2</span><b>Обрати гілку</b><span>Так — один варіант, ні — інший.</span></div>
+          <div class="step"><span class="stepnum">3</span><b>Вивести результат</b><span>«Зараховано» або «Повторити».</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Загальний вигляд формули</h3>
+        <div class="formula"><span class="fn">=IF</span>(<span class="arg">умова</span>;<span class="arg">значення_якщо_так</span>;<span class="arg">значення_якщо_ні</span>)</div>
+        <p>У формулі три частини. Їх розділяємо крапкою з комою `;`.</p>
+        <div class="note"><b>Важливо:</b> IF не обов'язково повертає текст. Результатом може бути число, дата, обчислення або посилання на іншу клітинку.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-head"><div><h3>Подивись, як працює розгалуження</h3><p>Зміни бали — схема покаже, якою гілкою піде формула.</p></div></div>
+      <div class="controls">
+        <div class="control" style="flex:1;max-width:360px"><label for="introScore">Кількість балів у клітинці A2</label><div class="range-row"><input id="introScore" type="range" min="0" max="20" value="13"><output id="introScoreOut">13</output></div></div>
+      </div>
+      <div class="flow-wrap">
+        <div class="flow-title">Схема виконання IF</div>
+        <div class="flowchart" id="introFlow"></div>
+        <div class="flow-foot" id="introFoot">Формула перевіряє умову та обирає лише одну з двох гілок.</div>
+      </div>
+      <div class="substitution" id="introSub"></div>
+    </div>
+    <div class="nav-bottom"><span class="top-note">Перейди до наступної сторінки, щоб спробувати самостійно.</span><button class="btn" data-next="1">До простої умови →</button></div>
+  </section>
+
+  <!-- PAGE 2 -->
+  <section class="page" id="page1">
+    <div class="hero">
+      <div><div class="kicker">● Сторінка 2 · простий випадок</div><h2>Підставляємо значення в умову</h2><p>Формула порівнює число з порогом. Зміни значення в клітинці A2 і простеж, як змінюється результат.</p></div>
+      <div class="big-icon" aria-hidden="true">🔀</div>
+    </div>
+    <div class="card">
+      <div class="section-head"><div><h3>Експеримент із формулою</h3><p>Зараз умова така: значення A2 не менше 10.</p></div><span class="pill yes" id="s2Status">Умова істинна</span></div>
+      <div class="controls">
+        <div class="control" style="flex:1;max-width:310px"><label for="s2Value">Значення клітинки A2</label><div class="range-row"><input id="s2Value" type="range" min="0" max="20" value="13"><output id="s2ValueOut">13</output></div></div>
+        <div class="control"><label for="s2Threshold">Порогове значення</label><input id="s2Threshold" type="number" min="0" max="20" value="10"></div>
+      </div>
+      <div class="formula"><span class="fn">=IF</span>(A2&gt;=<span id="s2ThresholdCode">10</span>;<span class="str">"Зараховано"</span>;<span class="str">"Повторити"</span>)</div>
+      <div class="flow-wrap" style="margin-top:15px">
+        <div class="flow-title">Графічне пояснення: яка гілка спрацює?</div>
+        <div class="flowchart" id="s2Flow"></div>
+        <div class="flow-foot" id="s2Foot"></div>
+      </div>
+      <div class="substitution" id="s2Sub"></div>
+      <div class="result-box"><div><span class="small">Результат формули</span><strong id="s2Result">Зараховано</strong></div><span class="pill yes" id="s2ResultPill">Гілка «Так»</span></div>
+    </div>
+    <div class="card">
+      <h3>Тепер напиши формулу самостійно</h3>
+      <p>Завдання: якщо в A2 число не менше 10, показати «Зараховано», інакше — «Повторити».</p>
+      <div class="editor">
+        <label for="s2Answer">Твоя формула</label>
+        <div class="editor-row"><input class="answer-input" id="s2Answer" placeholder='Наприклад: =IF(A2>=10;"Так";"Ні")' autocomplete="off"><button class="btn" id="s2Check">Перевірити</button></div>
+        <div class="feedback" id="s2Feedback" aria-live="polite"></div>
+        <button class="btn secondary" id="s2Hint" style="margin-top:5px">Показати підказку</button>
+        <div class="hint" id="s2HintText">Почни з <b>=IF(</b>, далі запиши порівняння <b>A2&gt;=10</b>, потім через `;` — текст для істинної та хибної умов у подвійних лапках.</div>
+      </div>
+    </div>
+    <div class="nav-bottom"><button class="btn secondary" data-prev="0">← Назад</button><button class="btn" data-next="2">До складнішої формули →</button></div>
+  </section>
+
+  <!-- PAGE 3 -->
+  <section class="page" id="page2">
+    <div class="hero">
+      <div><div class="kicker">● Сторінка 3 · складніша формула</div><h2>У гілках можуть бути обчислення та інші IF</h2><p>Умова вибирає, яку частину формули виконати. А всередині кожної гілки може бути множення, додавання або ще одна перевірка.</p></div>
+      <div class="big-icon" aria-hidden="true">ƒx</div>
+    </div>
+    <div class="card">
+      <div class="section-head"><div><h3>Випадок 1. Підстановка формул</h3><p>Якщо сума покупки від 100 — знижка 10%, інакше додаємо 10 бонусних одиниць.</p></div></div>
+      <div class="formula"><span class="fn">=IF</span>(B2&gt;=100;B2*0,9;B2+10)</div>
+      <div class="controls">
+        <div class="control" style="flex:1;max-width:310px"><label for="s3Value">Сума в клітинці B2</label><div class="range-row"><input id="s3Value" type="range" min="0" max="200" value="120"><output id="s3ValueOut">120</output></div></div>
+      </div>
+      <div class="flow-wrap">
+        <div class="flow-title">Спочатку перевірка, потім обчислення потрібної гілки</div>
+        <div class="flowchart" id="s3Flow"></div>
+        <div class="flow-foot" id="s3Foot"></div>
+      </div>
+      <div class="substitution" id="s3Sub"></div>
+      <div class="result-box"><div><span class="small">Отриманий результат</span><strong id="s3Result">108</strong></div><span class="pill yes" id="s3Pill">Застосовано знижку 10%</span></div>
+      <div class="note">Зверни увагу: <b>0,9</b> — це 90% від початкового числа. У налаштуваннях української локалі десяткова частина числа зазвичай відокремлюється комою.</div>
+    </div>
+    <div class="card">
+      <div class="section-head"><div><h3>Випадок 2. Вкладена функція IF</h3><p>Якщо однієї умови недостатньо, у гілці «Ні» можна поставити ще одну функцію IF.</p></div></div>
+      <div class="formula"><span class="fn">=IF</span>(C2&gt;=90;<span class="str">"Високий"</span>;<span class="fn">IF</span>(C2&gt;=60;<span class="str">"Середній"</span>;<span class="str">"Низький"</span>))</div>
+      <div class="controls">
+        <div class="control" style="flex:1;max-width:310px"><label for="s3Grade">Кількість балів у C2</label><div class="range-row"><input id="s3Grade" type="range" min="0" max="100" value="75"><output id="s3GradeOut">75</output></div></div>
+      </div>
+      <div class="flow-wrap">
+        <div class="flow-title">Дві перевірки — три можливі результати</div>
+        <div id="nestedFlow"></div>
+        <div class="flow-foot" id="nestedFoot"></div>
+      </div>
+      <div class="substitution" id="nestedSub"></div>
+      <div class="result-box"><div><span class="small">Рівень результату</span><strong id="nestedResult">Середній</strong></div><span class="pill yes" id="nestedPill">Друга умова істинна</span></div>
+    </div>
+    <div class="card">
+      <h3>Перевір себе: запиши вкладену формулу</h3>
+      <p>Завдання: якщо C2 не менше 90 — «Високий»; якщо інакше C2 не менше 60 — «Середній»; в усіх інших випадках — «Низький».</p>
+      <div class="editor">
+        <label for="s3Answer">Твоя формула</label>
+        <div class="editor-row"><input class="answer-input" id="s3Answer" placeholder="Введи формулу з двома IF" autocomplete="off"><button class="btn" id="s3Check">Перевірити</button></div>
+        <div class="feedback" id="s3Feedback" aria-live="polite"></div>
+        <button class="btn secondary" id="s3Hint" style="margin-top:5px">Показати підказку</button>
+        <div class="hint" id="s3HintText">Зовнішня функція перевіряє <b>C2&gt;=90</b>. Її третім аргументом (гілкою «Ні») стане ще одна повна функція <b>IF(C2&gt;=60;...;...)</b>.</div>
+      </div>
+    </div>
+    <div class="nav-bottom"><button class="btn secondary" data-prev="1">← Назад</button><button class="btn" data-next="3">До прикладів →</button></div>
+  </section>
+
+  <!-- PAGE 4 -->
+  <section class="page" id="page3">
+    <div class="hero">
+      <div><div class="kicker">● Сторінка 4 · застосування</div><h2>Розгалуження автоматизує звичайні рішення</h2><p>IF корисна скрізь, де результат залежить від умови: оцінка, наявність товару, знижка, оплата доставки тощо.</p></div>
+      <div class="big-icon" aria-hidden="true">✓?</div>
+    </div>
+    <div class="card">
+      <h3>Обери приклад і зміни значення</h3>
+      <p>Кожен приклад має формулу, перевірку та схему двох можливих шляхів.</p>
+      <div class="examples-grid" id="exampleChoices">
+        <button class="example-card active" data-example="grade"><strong>🎓 Оцінювання</strong><span>Чи достатньо балів для зарахування?</span></button>
+        <button class="example-card" data-example="stock"><strong>📦 Наявність товару</strong><span>Чи є товар на складі?</span></button>
+        <button class="example-card" data-example="discount"><strong>🏷️ Знижка</strong><span>Чи досягла покупка потрібної суми?</span></button>
+        <button class="example-card" data-example="delivery"><strong>🚚 Доставка</strong><span>Чи буде доставка безкоштовною?</span></button>
+      </div>
+      <div class="example-detail">
+        <div class="controls">
+          <div class="control" style="flex:1;max-width:310px"><label id="exValueLabel" for="exValue">Бали за тест</label><div class="range-row"><input id="exValue" type="range" min="0" max="20" value="12"><output id="exValueOut">12</output></div></div>
+        </div>
+        <div class="formula" id="exFormula"></div>
+        <div class="flow-wrap" style="margin-top:15px">
+          <div class="flow-title">Схема рішення</div>
+          <div class="flowchart" id="exFlow"></div>
+          <div class="flow-foot" id="exFoot"></div>
+        </div>
+        <div class="substitution" id="exSub"></div>
+        <div class="result-box"><div><span class="small">Що покаже клітинка</span><strong id="exResult">Зараховано</strong></div><span class="pill yes" id="exPill">Гілка «Так»</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Фінальне завдання</h3>
+      <p>У клітинці E2 записано кількість зошитів. Напиши формулу: якщо E2 більше 5 — вивести «Достатньо», інакше — «Замовити».</p>
+      <div class="editor">
+        <label for="finalAnswer">Твоя формула</label>
+        <div class="editor-row"><input class="answer-input" id="finalAnswer" placeholder='=IF(E2>5;"Достатньо";"Замовити")' autocomplete="off"><button class="btn green" id="finalCheck">Перевірити</button></div>
+        <div class="feedback" id="finalFeedback" aria-live="polite"></div>
+        <button class="btn secondary" id="finalHint" style="margin-top:5px">Показати відповідь</button>
+        <div class="hint" id="finalHintText">=IF(E2&gt;5;"Достатньо";"Замовити")</div>
+      </div>
+    </div>
+    <div class="nav-bottom"><button class="btn secondary" data-prev="2">← Назад</button><button class="btn" id="restart">Почати спочатку ↺</button></div>
+  </section>
+  <div class="footer">Інтерактивний навчальний матеріал · Формули наведено з роздільником аргументів ;</div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+let currentPage = 0;
+function fmt(n){return Number.isInteger(n)?String(n):Number(n.toFixed(2)).toString().replace('.',',')}
+function setPage(n){
+  currentPage=Math.max(0,Math.min(3,n));
+  document.querySelectorAll('.page').forEach((p,i)=>p.classList.toggle('active',i===currentPage));
+  document.querySelectorAll('.tab').forEach((t,i)=>{t.classList.toggle('active',i===currentPage);t.classList.toggle('done',i<currentPage)});
+  $('progress').style.width=((currentPage+1)*25)+'%';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>setPage(Number(t.dataset.page))));
+document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',()=>setPage(Number(b.dataset.next))));
+document.querySelectorAll('[data-prev]').forEach(b=>b.addEventListener('click',()=>setPage(Number(b.dataset.prev))));
+
+function simpleFlow(container, condition, yesText, noText, active){
+  $(container).innerHTML=`<div class="flow-node start">Початок</div><div class="stem"></div><div class="flow-node decision">${condition}</div><div class="stem"></div><div class="branch-row"><div class="branch yes ${active?'active':''}"><span class="branch-label">ТАК</span><div class="flow-node out">${yesText}</div></div><div class="branch no ${!active?'active':''}"><span class="branch-label">НІ</span><div class="flow-node out">${noText}</div></div></div>`;
+}
+function normalize(s){return s.toLowerCase().replace(/\s+/g,'').replace(/,/g,'.')}
+function checkAnswer(inputId,feedbackId,expected,successText){
+  const got=normalize($(inputId).value);const exp=normalize(expected);
+  const f=$(feedbackId);f.className='feedback';
+  if(got===exp){f.textContent=successText||'Правильно! Формулу записано вірно.';f.classList.add('ok')}
+  else{f.textContent='Поки що не збігається. Перевір порядок аргументів, знаки порівняння, крапки з комою та лапки.';f.classList.add('bad')}
+}
+function toggleHint(btnId,hintId){$(btnId).addEventListener('click',()=>$(hintId).classList.toggle('show'))}
+
+// Page 1: introduction
+function updateIntro(){
+ const v=Number($('introScore').value), ok=v>=10;
+ $('introScoreOut').textContent=v;
+ simpleFlow('introFlow','A2 ≥ 10 ?','Зараховано','Повторити',ok);
+ $('introFoot').textContent=ok?`A2 = ${v}. Умова ${v} ≥ 10 істинна — виконується гілка «Так».`:`A2 = ${v}. Умова ${v} ≥ 10 хибна — виконується гілка «Ні».`;
+ $('introSub').innerHTML=`<b>Підстановка значення</b>=IF(${v}>=10;"Зараховано";"Повторити") → <b>${ok?'"Зараховано"':'"Повторити"'}</b>`;
+}
+$('introScore').addEventListener('input',updateIntro);updateIntro();
+
+// Page 2: simple IF
+function updateS2(){
+ const v=Number($('s2Value').value);let t=Number($('s2Threshold').value);if(!Number.isFinite(t))t=10;
+ const ok=v>=t;$('s2ValueOut').textContent=v;$('s2ThresholdCode').textContent=fmt(t);
+ $('s2Status').textContent=ok?'Умова істинна':'Умова хибна';$('s2Status').className='pill '+(ok?'yes':'no');
+ simpleFlow('s2Flow',`A2 ≥ ${fmt(t)} ?`,'"Зараховано"','"Повторити"',ok);
+ $('s2Foot').textContent=ok?'Порівняння істинне. Формула повертає другий аргумент — «Зараховано».':'Порівняння хибне. Формула пропускає другий аргумент і повертає третій — «Повторити».';
+ $('s2Sub').innerHTML=`<b>Підставляємо A2 = ${v}</b>=IF(${v}>=${fmt(t)};"Зараховано";"Повторити") → ${ok?'"Зараховано"':'"Повторити"'}`;
+ $('s2Result').textContent=ok?'Зараховано':'Повторити';$('s2ResultPill').textContent=ok?'Гілка «Так»':'Гілка «Ні»';$('s2ResultPill').className='pill '+(ok?'yes':'no');
+}
+$('s2Value').addEventListener('input',updateS2);$('s2Threshold').addEventListener('input',updateS2);updateS2();
+$('s2Check').addEventListener('click',()=>checkAnswer('s2Answer','s2Feedback','=IF(A2>=10;"Зараховано";"Повторити")','Чудово! Це правильна формула IF.'));
+toggleHint('s2Hint','s2HintText');
+
+// Page 3: calculations in branches
+function updateS3(){
+ const v=Number($('s3Value').value),ok=v>=100,res=ok?v*.9:v+10;
+ $('s3ValueOut').textContent=v;
+ simpleFlow('s3Flow','B2 ≥ 100 ?','B2 × 0,9','B2 + 10',ok);
+ $('s3Foot').textContent=ok?'Умова істинна: виконуємо множення B2 на 0,9 — застосовуємо знижку.':'Умова хибна: виконуємо додавання B2 + 10 — нараховуємо бонус.';
+ $('s3Sub').innerHTML=`<b>Підстановка B2 = ${v}</b>=IF(${v}>=100;${v}*0,9;${v}+10) → ${ok?`${v}*0,9 = ${fmt(res)}`:`${v}+10 = ${fmt(res)}`}`;
+ $('s3Result').textContent=fmt(res);$('s3Pill').textContent=ok?'Застосовано знижку 10%':'Додано 10 бонусів';$('s3Pill').className='pill '+(ok?'yes':'no');
+}
+$('s3Value').addEventListener('input',updateS3);updateS3();
+function updateNested(){
+ const v=Number($('s3Grade').value),first=v>=90,second=!first&&v>=60;
+ $('s3GradeOut').textContent=v;
+ const result=first?'Високий':second?'Середній':'Низький';
+ $('nestedFlow').innerHTML=`<div class="flow-node start">Початок: C2 = ${v}</div><div class="stem"></div><div class="flow-node decision">C2 ≥ 90 ?</div><div class="stem"></div><div class="nested-flow"><div class="nested-side ${first?'active':'inactive'}"><span class="branch-label">ТАК</span><div class="flow-node out">"Високий"</div><div class="nested-caption">Перша умова істинна</div></div><div class="nested-side ${!first?'active':'inactive'}"><span class="branch-label">НІ</span><div class="flow-node decision">C2 ≥ 60 ?</div><div class="nested-caption">Перевіряємо другу умову</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><div><span class="branch-label" style="display:inline-block">ТАК</span><div class="flow-node out" style="min-width:0">"Середній"</div></div><div><span class="branch-label" style="display:inline-block">НІ</span><div class="flow-node out" style="min-width:0">"Низький"</div></div></div></div></div>`;
+ const nestedSide=$('nestedFlow').querySelectorAll('.nested-side');
+ if(!first){nestedSide[1].querySelectorAll('.flow-node.out')[second?0:1].style.borderColor=second?'#69bd8b':'#e39a94';nestedSide[1].querySelectorAll('.flow-node.out')[second?0:1].style.background=second?'#f0fbf4':'#fff6f5';nestedSide[1].querySelectorAll('.branch-label')[1].style.background=second?'var(--green-soft)':'var(--red-soft)';nestedSide[1].querySelectorAll('.branch-label')[1].style.color=second?'var(--green)':'var(--red)';}
+ $('nestedFoot').textContent=first?'Перша перевірка істинна. До другої функції IF програма не переходить.':second?'Перша умова хибна, тому перевіряємо C2 ≥ 60. Друга умова істинна.':'Обидві умови хибні. Формула повертає останній варіант — «Низький».';
+ $('nestedSub').innerHTML=`<b>Підстановка C2 = ${v}</b>=IF(${v}>=90;"Високий";IF(${v}>=60;"Середній";"Низький")) → <b>"${result}"</b>`;
+ $('nestedResult').textContent=result;$('nestedPill').textContent=first?'Перша умова істинна':second?'Друга умова істинна':'Обидві умови хибні';$('nestedPill').className='pill '+(first||second?'yes':'no');
+}
+$('s3Grade').addEventListener('input',updateNested);updateNested();
+$('s3Check').addEventListener('click',()=>checkAnswer('s3Answer','s3Feedback','=IF(C2>=90;"Високий";IF(C2>=60;"Середній";"Низький"))','Правильно! Ти створив вкладену функцію IF.'));
+toggleHint('s3Hint','s3HintText');
+
+// Page 4: applied examples
+const examples={
+ grade:{label:'Бали за тест',min:0,max:20,value:12,condition:'A2 ≥ 10 ?',formula:'=IF(A2>=10;"Зараховано";"Перескладання")',yes:'"Зараховано"',no:'"Перескладання"',test:v=>v>=10,result:v=>v>=10?'Зараховано':'Перескладання',yesExplain:'10 або більше балів — тест зараховано.',noExplain:'Менше 10 балів — потрібно перескласти.',sub:v=>`=IF(${v}>=10;"Зараховано";"Перескладання")`},
+ stock:{label:'Кількість товару на складі',min:0,max:30,value:4,condition:'B2 > 0 ?',formula:'=IF(B2>0;"Є в наявності";"Немає")',yes:'"Є в наявності"',no:'"Немає"',test:v=>v>0,result:v=>v>0?'Є в наявності':'Немає',yesExplain:'Є хоча б одна одиниця товару.',noExplain:'Кількість дорівнює нулю — товару немає.',sub:v=>`=IF(${v}>0;"Є в наявності";"Немає")`},
+ discount:{label:'Сума покупки',min:0,max:3000,value:1500,condition:'C2 ≥ 1000 ?',formula:'=IF(C2>=1000;C2*0,9;C2)',yes:'C2 × 0,9',no:'C2 без змін',test:v=>v>=1000,result:v=>fmt(v>=1000?v*.9:v),yesExplain:'Покупка від 1000 — сплачуємо 90% суми.',noExplain:'Покупка менша за 1000 — знижки немає.',sub:v=>`=IF(${v}>=1000;${v}*0,9;${v})`},
+ delivery:{label:'Сума замовлення',min:0,max:4000,value:2500,condition:'D2 ≥ 2000 ?',formula:'=IF(D2>=2000;0;100)',yes:'0 грн — безкоштовно',no:'100 грн — платно',test:v=>v>=2000,result:v=>v>=2000?'0 грн':'100 грн',yesExplain:'Замовлення від 2000 — доставка безкоштовна.',noExplain:'Замовлення менше 2000 — доставка коштує 100 грн.',sub:v=>`=IF(${v}>=2000;0;100)`}
+};
+let activeExample='grade';
+function selectExample(key){
+ activeExample=key;const e=examples[key];
+ document.querySelectorAll('.example-card').forEach(b=>b.classList.toggle('active',b.dataset.example===key));
+ $('exValueLabel').textContent=e.label;$('exValue').min=e.min;$('exValue').max=e.max;$('exValue').value=e.value;$('exValueOut').textContent=e.value;
+ $('exFormula').textContent=e.formula;updateExample();
+}
+function updateExample(){
+ const e=examples[activeExample],v=Number($('exValue').value),ok=e.test(v);$('exValueOut').textContent=v;
+ simpleFlow('exFlow',e.condition,e.yes,e.no,ok);
+ $('exFoot').textContent=ok?e.yesExplain:e.noExplain;
+ $('exSub').innerHTML=`<b>Підстановка значення ${v}</b>${e.sub(v)} → <b>${e.result(v)}</b>`;
+ $('exResult').textContent=e.result(v);$('exPill').textContent=ok?'Гілка «Так»':'Гілка «Ні»';$('exPill').className='pill '+(ok?'yes':'no');
+}
+document.querySelectorAll('.example-card').forEach(b=>b.addEventListener('click',()=>selectExample(b.dataset.example)));
+$('exValue').addEventListener('input',updateExample);selectExample('grade');
+$('finalCheck').addEventListener('click',()=>checkAnswer('finalAnswer','finalFeedback','=IF(E2>5;"Достатньо";"Замовити")','Чудово! Це правильна формула.'));
+toggleHint('finalHint','finalHintText');
+$('restart').addEventListener('click',()=>{setPage(0);$('introScore').value=13;updateIntro();$('s2Answer').value='';$('s3Answer').value='';$('finalAnswer').value='';['s2Feedback','s3Feedback','finalFeedback'].forEach(id=>$(id).textContent='');});
+</script>
+</body>
+</html>
