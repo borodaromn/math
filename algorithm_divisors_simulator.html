@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Алгоритм пошуку дільників числа, за таблицею простих чисел</title>
+<style>
+:root{--bg:#f3f6fb;--panel:#fff;--ink:#172235;--muted:#64748b;--line:#dbe3ef;--blue:#2563eb;--blue-soft:#eaf1ff;--green:#16834b;--green-soft:#e8f7ee;--orange:#c46b12;--orange-soft:#fff4e5;--red:#c43d45;--shadow:0 8px 26px rgba(27,48,84,.08)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{background:linear-gradient(115deg,#12294a,#1d4b83);color:#fff;padding:23px max(22px,calc((100% - 1240px)/2)) 20px}
+header .eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#bdd4f5;font-weight:700}h1{font-size:clamp(23px,3vw,34px);line-height:1.2;margin:7px 0 8px;max-width:950px}header p{margin:0;color:#d8e5f6;max-width:850px}
+nav{display:flex;gap:8px;margin-top:19px;flex-wrap:wrap}nav button{border:1px solid #ffffff55;background:#ffffff12;color:#eaf2ff;border-radius:9px;padding:9px 15px;font-weight:650;cursor:pointer}nav button.active{background:#fff;color:#173b68;border-color:#fff}
+main{max-width:1240px;margin:22px auto;padding:0 18px 40px}.page{display:none}.page.active{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:19px;box-shadow:var(--shadow);margin-bottom:17px}.card h2,.card h3{margin:0 0 11px}.card h2{font-size:21px}.card h3{font-size:17px}.lead{font-size:16px;color:#40516b}.muted{color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.rule{border-left:4px solid #6d98e8;padding:10px 13px;background:#f7faff;border-radius:8px;margin:10px 0}.rule strong{display:block;margin-bottom:3px}.formula{font:600 20px Georgia,serif;background:#f1f5fb;border:1px solid #e0e8f3;border-radius:10px;padding:13px;text-align:center;margin:10px 0}.mathline{font:17px Georgia,serif}.pill{display:inline-block;padding:3px 9px;border-radius:999px;background:var(--blue-soft);color:#2454a0;font-size:12px;font-weight:700}.warning{background:var(--orange-soft);border-left:4px solid #e6a34c;border-radius:8px;padding:12px 14px}.success{background:var(--green-soft);border-left:4px solid #4bb47b;border-radius:8px;padding:12px 14px}
+button{font:inherit}.controls{display:flex;gap:8px;align-items:end;flex-wrap:wrap}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:12px;color:var(--muted);font-weight:700}.field input{width:125px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 11px;font:inherit;color:var(--ink);background:#fff}.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;background:#e9eef6;color:#23344e}.btn.primary{background:var(--blue);color:white}.btn.dark{background:#203c62;color:white}.btn:disabled{opacity:.42;cursor:not-allowed}.toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.stepcount{font-weight:700;color:#435675}.progress{height:7px;background:#e8edf5;border-radius:99px;overflow:hidden;margin-top:12px}.progress>span{display:block;height:100%;background:#3b82f6;width:0;transition:width .15s}
+.simgrid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(330px,.9fr);gap:16px;align-items:start}.codebox{background:#111d30;border-radius:12px;padding:12px 8px;color:#dbeafe;overflow:auto}.code-line{display:grid;grid-template-columns:34px 1fr;gap:8px;padding:4px 9px;border-radius:6px;white-space:pre;font:13px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace}.code-line .ln{color:#7586a2;text-align:right;user-select:none}.code-line.active{background:#244b79;outline:1px solid #78aef5;color:#fff}.code-line .kw{color:#91c5ff}.code-line .fn{color:#9be0bf}.commentbox{border:1px solid #f2d39e;background:#fff9ed;border-radius:11px;padding:13px 14px;min-height:110px}.commentbox .label{font-size:11px;font-weight:800;color:#a15a0d;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}.commentbox h3{margin:0 0 5px;font-size:16px}.commentbox p{margin:0;color:#664b2d}.detail{font-size:13px;color:#52627a;margin-top:8px}
+.variables{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.var{border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:#fbfcfe;min-width:0}.var .name{font-size:11px;color:var(--muted);font-weight:800}.var .value{font:700 19px ui-monospace,Consolas,monospace;overflow-wrap:anywhere}.var.changed{border-color:#8bb3f3;background:#f0f6ff}.structure{border:1px solid var(--line);border-radius:10px;padding:11px;background:#fbfcfe;margin-top:10px}.structure-title{font-size:12px;color:var(--muted);font-weight:800;margin-bottom:7px}.chips{display:flex;flex-wrap:wrap;gap:5px}.chip{font:12px ui-monospace,Consolas,monospace;background:#edf1f7;border:1px solid #dbe3ef;border-radius:6px;padding:4px 7px}.chip.current{background:#ffedcf;border-color:#e7ac53;color:#8e4e08;font-weight:800}.chip.used{background:#e5f5eb;border-color:#98d2ad;color:#17633b}.empty{color:#8b98aa;font-style:italic;font-size:13px}.factorline{font:17px Georgia,serif;overflow-wrap:anywhere}.result-number{font-size:30px;font-weight:850;color:var(--green)}.log{max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:9px}.logrow{display:flex;gap:9px;padding:7px 9px;border-bottom:1px solid #edf0f5;font-size:12px;cursor:pointer}.logrow:last-child{border-bottom:0}.logrow.active{background:#edf4ff}.logrow b{color:#315f9e;min-width:35px}.tableprimes{display:flex;flex-wrap:wrap;gap:5px;max-height:140px;overflow:auto;padding:2px}.prime{min-width:32px;text-align:center;border:1px solid #dce4ef;border-radius:6px;padding:4px 5px;font:12px ui-monospace,Consolas,monospace;background:#f6f8fb}.prime.current{background:#fff0d8;border-color:#e6a348;color:#95520a;font-weight:800}.prime.past{background:#e8f6ed;border-color:#a8d5b7;color:#1b7042}.footnote{font-size:12px;color:var(--muted)}
+@media(max-width:850px){.simgrid,.grid2{grid-template-columns:1fr}.grid3{grid-template-columns:1fr 1fr}.variables{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){main{padding:0 10px 24px}.card{padding:14px}.grid3{grid-template-columns:1fr}.variables{grid-template-columns:1fr 1fr}.code-line{font-size:11px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">Інформатика · алгоритми · теорія чисел</div>
+  <h1>Алгоритм пошуку дільників числа, за таблицею простих чисел</h1>
+  <p>Покрокове дослідження розкладу числа на прості множники та обчислення кількості його натуральних дільників.</p>
+  <nav>
+    <button class="active" data-page="theory">1. Математичні правила</button>
+    <button data-page="simulator">2. Покроковий симулятор</button>
+  </nav>
+</header>
+<main>
+<section id="theory" class="page active">
+  <div class="card">
+    <span class="pill">Що обчислює програма</span>
+    <h2 style="margin-top:9px">Не перебираємо всі числа-кандидати на дільники</h2>
+    <p class="lead">Алгоритм розкладає число на прості множники, а потім за цим розкладом обчислює <b>кількість</b> натуральних дільників. Для цього достатньо перевіряти прості числа з уже підготовленої таблиці.</p>
+    <div class="formula">n = p₁<sup>a₁</sup> · p₂<sup>a₂</sup> · … · pₘ<sup>aₘ</sup></div>
+    <p>Тут <b>p₁, p₂, …, pₘ</b> — різні прості множники, а <b>a₁, a₂, …, aₘ</b> — кількість входжень кожного простого множника.</p>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Правило 1. Основна теорема арифметики</h3>
+      Будь-яке натуральне число, більше за 1, можна подати як добуток простих чисел. Такий розклад єдиний, якщо не враховувати порядок множників.
+      <div class="rule"><strong>Приклад</strong><span class="mathline">60 = 2 · 2 · 3 · 5 = 2² · 3 · 5</span></div>
+      Складені множники окремо шукати не потрібно: наприклад, 4 = 2 · 2, 6 = 2 · 3, 9 = 3 · 3. Їх уже враховують прості множники.
+    </div>
+    <div class="card">
+      <h3>Правило 2. Формула кількості дільників</h3>
+      Якщо розклад числа має вигляд, наведений вище, то кількість його натуральних дільників дорівнює:
+      <div class="formula">D(n) = (a₁ + 1)(a₂ + 1)…(aₘ + 1)</div>
+      <div class="rule"><strong>Приклад для 60</strong>60 = 2² · 3¹ · 5¹, тому D(60) = (2+1)(1+1)(1+1) = <b>12</b>.</div>
+    </div>
+    <div class="card">
+      <h3>Правило 3. Чому множимо на k + 1</h3>
+      Якщо простий множник <b>p</b> входить у розклад <b>k</b> разів, то в дільнику його можна використати в степені від 0 до k.
+      <div class="rule"><strong>Наприклад, p²</strong>Можливі варіанти: p⁰ = 1, p¹ = p, p². Маємо три варіанти, тобто k + 1 = 3.</div>
+      Для різних простих множників ці варіанти комбінуються незалежно, тому кількості перемножуються.
+    </div>
+    <div class="card">
+      <h3>Правило 4. Перевіряємо тільки прості числа</h3>
+      Достатньо послідовно ділити число на прості числа з таблиці: 2, 3, 5, 7, 11, 13, … Якщо просте число не ділить залишок, переходимо до наступного.
+      <div class="rule"><strong>Навіщо це?</strong>Складене число має простий дільник. Отже, коли прості множники перевіряються послідовно, складені множники не можуть залишитися непоміченими.</div>
+    </div>
+    <div class="card">
+      <h3>Правило 5. Коли можна зупинити перевірку</h3>
+      Якщо для поточного залишку <b>n</b> виконується умова <b>p · p &gt; n</b>, подальший перебір не потрібний.
+      <div class="rule"><strong>Пояснення</strong>Якби залишок n був складеним, у нього обов'язково був би простий дільник не більший за √n. Усі такі прості числа вже перевірені.</div>
+      Тому залишок, більший за 1, на цьому етапі є простим числом.
+    </div>
+    <div class="card">
+      <h3>Правило 6. Що означає залишок n &gt; 1</h3>
+      Після циклу може залишитися один простий множник, який зустрівся один раз. Його показник дорівнює 1, тому він додає множник (1+1) = 2 до кількості дільників.
+      <div class="rule"><strong>У коді</strong><code>if n &gt; 1: res = res * 2</code></div>
+      Якщо залишок дорівнює 1, додатковий множник не потрібний.
+    </div>
+  </div>
+  <div class="card">
+    <h3>Особливі випадки та межі алгоритму</h3>
+    <div class="grid3">
+      <div class="success"><b>n = 1</b><br>Є один натуральний дільник — саме число 1. Тому результат дорівнює 1.</div>
+      <div class="warning"><b>n = 0 або n &lt; 0</b><br>Цей алгоритм їх не обробляє: перевіряються лише натуральні числа від 1 до max_n.</div>
+      <div class="success"><b>Просте n</b><br>Має два дільники: 1 і саме число. У формулі це (1+1) = 2.</div>
+    </div>
+    <p class="footnote" style="margin-top:13px">Таблиця простих чисел створюється один раз до max_n. Функція erato(n) використовує готовий список primes для кожного нового числа.</p>
+  </div>
+  <div style="display:flex;justify-content:flex-end"><button class="btn primary" onclick="showPage('simulator')">Перейти до симулятора →</button></div>
+</section>
+
+<section id="simulator" class="page">
+  <div class="card">
+    <div class="toolbar">
+      <div><h2>Покрокове виконання erato(n)</h2><div class="muted">Оберіть число й переходьте між окремими діями алгоритму.</div></div>
+      <div class="controls">
+        <div class="field"><label for="numberInput">Число n</label><input id="numberInput" type="number" min="1" max="500" value="360"></div>
+        <div class="field"><label for="maxInput">Межа max_n</label><input id="maxInput" type="number" min="2" max="10000" value="500"></div>
+        <button class="btn primary" id="loadBtn">Завантажити</button>
+      </div>
+    </div>
+    <div class="progress"><span id="progressBar"></span></div>
+    <div class="toolbar" style="margin-top:12px">
+      <div class="stepcount" id="stepCount">Крок 0 із 0</div>
+      <div class="controls">
+        <button class="btn" id="resetBtn">На початок</button>
+        <button class="btn" id="prevBtn">← Назад</button>
+        <button class="btn primary" id="nextBtn">Далі →</button>
+        <button class="btn dark" id="autoBtn">▶ Автопрохід</button>
+        <button class="btn" id="finishBtn">До результату</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="simgrid">
+    <div>
+      <div class="card">
+        <h3>Код функції</h3>
+        <div class="codebox" id="codeBox"></div>
+        <div class="commentbox" style="margin-top:12px" aria-live="polite">
+          <div class="label">Пояснення до поточного рядка</div>
+          <h3 id="explainTitle">Підготовка симуляції</h3>
+          <p id="explainText">Натисніть «Далі», щоб розпочати виконання.</p>
+          <div class="detail" id="explainDetail"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Послідовність виконання</h3>
+        <div class="log" id="stepLog"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3>Значення змінних</h3>
+        <div class="variables" id="variables"></div>
+        <div class="structure">
+          <div class="structure-title">Факторизація — знайдені прості множники</div>
+          <div class="factorline" id="factorization">Ще не знайдено</div>
+          <div class="footnote" id="factorNote" style="margin-top:6px">Множник з'явиться після першого ділення на нього.</div>
+        </div>
+        <div class="structure">
+          <div class="structure-title">Таблиця простих чисел — primes</div>
+          <div class="tableprimes" id="primeTable"></div>
+          <div class="footnote" style="margin-top:7px">Зелений — уже опрацьовано; помаранчевий — поточне просте число.</div>
+        </div>
+        <div class="structure">
+          <div class="structure-title">Поточне обчислення кількості дільників</div>
+          <div class="factorline" id="formulaProgress">res = —</div>
+        </div>
+      </div>
+      <div class="card" id="resultCard">
+        <h3>Результат</h3>
+        <div class="muted" id="resultLabel">Виконайте алгоритм до кінця.</div>
+        <div class="result-number" id="resultValue">—</div>
+        <div class="structure">
+          <div class="structure-title">Дільники для перевірки</div>
+          <div class="chips" id="divisorsList"><span class="empty">З'являться після завершення обчислення.</span></div>
+        </div>
+        <p class="footnote">Функція erato(n) повертає кількість дільників. Список праворуч генерується симулятором окремо — лише для наочної перевірки відповіді.</p>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+<script>
+const codeLines = [
+  'def erato(n):',
+  '    if n < 1 or n > max_n:',
+  '        raise ValueError("Число поза межами решета")',
+  '    res = 1',
+  '    for p in primes:',
+  '        if p*p > n:',
+  '            break',
+  '        k = 0',
+  '        while n % p == 0:',
+  '            n = n // p',
+  '            k = k + 1',
+  '        if k > 0:',
+  '            res = res * (k + 1)',
+  '    if n > 1:',
+  '        res = res * 2',
+  '    return res'
+];
+const explanations = {
+  1:['Виклик функції','Функція отримує число n, для якого потрібно визначити кількість натуральних дільників.'],
+  2:['Перевірка меж','Число має бути не меншим за 1 і не більшим за max_n — верхню межу, до якої підготовлено таблицю простих чисел.'],
+  3:['Повідомлення про помилку','Якщо число виходить за дозволені межі, виконання зупиняється з помилкою. У цьому тренажері межі перевіряються під час завантаження числа.'],
+  4:['Початкове значення res','res накопичує кількість дільників. Спочатку воно дорівнює 1 — нейтральному елементу множення.'],
+  5:['Наступне просте число','Зі списку primes беремо чергове просте число p. Саме ним пробуємо ділити поточний залишок n.'],
+  6:['Перевірка p² > n','Якщо квадрат поточного простого числа вже більший за залишок n, подальша перевірка не потрібна: залишок є простим числом або дорівнює 1.'],
+  7:['Вихід із циклу','Умова з попереднього рядка істинна. Цикл перебору простих чисел завершується.'],
+  8:['Скидання лічильника k','Для нового простого числа p починаємо рахувати його степінь у розкладі з нуля.'],
+  9:['Перевірка подільності','Перевіряємо, чи ділиться залишок n на p без остачі. Якщо так — знайдено ще один множник p.'],
+  10:['Ділення на p','Зменшуємо залишок n у p разів. Кожне таке ділення прибирає один множник p з розкладу.'],
+  11:['Збільшення k','Лічильник k показує, скільки разів просте число p увійшло до розкладу початкового числа.'],
+  12:['Чи знайдено множник p?','Якщо k більше нуля, просте число p входило до розкладу. Тоді врахуємо кількість можливих степенів цього множника в дільниках.'],
+  13:['Оновлення res','Множимо res на k + 1. Якщо p зустрівся k разів, у дільнику можливі степені p від 0 до k — усього k + 1 варіантів.'],
+  14:['Перевірка залишку','Після циклу перевіряємо, чи залишилося n більше за 1. Якщо так, це останній простий множник із показником 1.'],
+  15:['Врахування останнього множника','Останній простий множник може бути використаний у дільнику або не використаний. Це два варіанти, тому res множиться на 2.'],
+  16:['Повернення відповіді','Функція повертає res — кількість натуральних дільників початкового числа.']
+};
+let maxN = 500, primes = [], trace = [], step = 0, timer = null, originalNumber = 360;
+let lastSnapshot = null;
+function sieve(limit){
+  const isPrime = Array(limit + 1).fill(true);
+  isPrime[0] = false; if(limit >= 1) isPrime[1] = false;
+  for(let i=2;i*i<=limit;i++) if(isPrime[i]) for(let j=i*i;j<=limit;j+=i) isPrime[j]=false;
+  const out=[]; for(let i=2;i<=limit;i++) if(isPrime[i]) out.push(i); return out;
+}
+function cloneState(s){return {n:s.n,p:s.p,k:s.k,res:s.res,factors:s.factors.map(x=>({...x})),processed:s.processed.slice(),status:s.status,returned:s.returned};}
+function buildTrace(number){
+  const t=[];
+  const s={input:number,n:number,p:null,k:null,res:null,factors:[],processed:[],status:'running',returned:null};
+  const add=(line,title,detail='')=>t.push({line,title,detail,state:cloneState(s)});
+  add(1,'Початок функції',`Вхідне значення: n = ${number}.`);
+  add(2,'Перевірка меж',`Перевіряємо: 1 <= ${number} <= ${maxN}.`);
+  if(number<1||number>maxN){s.status='error';add(3,'Помилка меж','Число не входить у допустимий діапазон.');return t;}
+  s.res=1; add(4,'Ініціалізація res','Встановлюємо res = 1.');
+  for(const p of primes){
+    s.p=p; add(5,'Вибір простого числа',`З таблиці primes беремо p = ${p}.`);
+    const stop=p*p>s.n; add(6,'Перевірка квадрату',`${p}² = ${p*p}; поточний залишок n = ${s.n}. Умова p² > n: ${stop?'істинна':'хибна'}.`);
+    if(stop){add(7,'Завершення циклу',`Оскільки ${p*p} > ${s.n}, припиняємо перебір простих чисел.`);s.processed.push(p);break;}
+    s.k=0; add(8,'Обнулення k',`Починаємо рахувати степінь простого множника ${p}.`);
+    while(true){
+      const divisible=s.n%p===0;
+      add(9,'Перевірка остачі',`${s.n} % ${p} ${divisible?'= 0 — ділиться без остачі':'≠ 0 — більше не ділиться'}.`);
+      if(!divisible)break;
+      const before=s.n; s.n=s.n/p; add(10,'Ділення залишку',`${before} // ${p} = ${s.n}. Один множник ${p} вилучено.`);
+      s.k++; const existing=s.factors.find(x=>x.p===p); if(existing)existing.exp++; else s.factors.push({p,exp:1});
+      add(11,'Збільшення показника',`k = ${s.k}. Отже, множник ${p} уже зустрівся ${s.k} раз(и).`);
+    }
+    const found=s.k>0; add(12,'Перевірка k',`k = ${s.k}. ${found?'Множник знайдено.':'Цей простий множник не входить до розкладу.'}`);
+    if(found){const before=s.res;s.res=s.res*(s.k+1);add(13,'Множення res',`res = ${before} · (${s.k} + 1) = ${s.res}.`);}
+    s.processed.push(p);
+  }
+  const hasRemainder=s.n>1; add(14,'Перевірка залишку',`Після циклу n = ${s.n}. Умова n > 1: ${hasRemainder?'істинна':'хибна'}.`);
+  if(hasRemainder){const before=s.res;s.factors.push({p:s.n,exp:1,residual:true});s.res=s.res*2;add(15,'Врахування залишку',`Залишок ${s.n} — простий множник із показником 1. res = ${before} · 2 = ${s.res}.`);}
+  s.status='done';s.returned=s.res;add(16,'Повернення результату',`Функція повертає ${s.res}. Це кількість натуральних дільників числа ${number}.`);
+  return t;
+}
+function makeDivisors(factors){
+  let values=[1];
+  for(const f of factors){const next=[];let power=1;for(let e=0;e<=f.exp;e++){for(const v of values)next.push(v*power);power*=f.p;}values=next;}
+  return values.sort((a,b)=>a-b);
+}
+function renderCode(){
+  const box=document.getElementById('codeBox');box.innerHTML='';
+  codeLines.forEach((line,i)=>{const row=document.createElement('div');row.className='code-line';row.id='code-'+(i+1);const ln=document.createElement('span');ln.className='ln';ln.textContent=i+1;const txt=document.createElement('span');txt.textContent=line;row.append(ln,txt);box.append(row);});
+}
+function renderPrimes(state){
+  const box=document.getElementById('primeTable');box.innerHTML='';
+  primes.forEach(p=>{const el=document.createElement('span');el.className='prime';el.textContent=p;if(state.p===p)el.classList.add('current');else if(state.processed.includes(p))el.classList.add('past');box.append(el);});
+}
+function renderVars(state){
+  const values=[['початкове число',originalNumber],['n · залишок',state.n],['p · простий множник',state.p??'—'],['p² · квадрат',state.p===null?'—':state.p*state.p],['k · показник',state.k??'—'],['res · результат',state.res??'—'],['max_n · межа',maxN]];
+  const box=document.getElementById('variables');box.innerHTML='';
+  values.forEach(([name,value])=>{const el=document.createElement('div');el.className='var';const nm=document.createElement('div');nm.className='name';nm.textContent=name;const val=document.createElement('div');val.className='value';val.textContent=value;el.append(nm,val);box.append(el);});
+}
+function renderFactors(state){
+  const f=state.factors;document.getElementById('factorization').textContent=f.length?`${originalNumber} = `+f.map(x=>x.exp===1?`${x.p}`:`${x.p}^${x.exp}`).join(' · '):'Ще не знайдено';
+  document.getElementById('factorNote').textContent=f.length?'Показник кожного простого множника дорівнює кількості успішних ділень на нього.':'Поки що жодного простого множника не вилучено.';
+  document.getElementById('formulaProgress').textContent=state.res===null?'res = —':`res = ${state.res}`;
+}
+function renderResult(state){
+  const complete=state.status==='done';
+  document.getElementById('resultLabel').textContent=complete?`Кількість натуральних дільників числа ${originalNumber}:`:'Виконайте алгоритм до кінця.';
+  document.getElementById('resultValue').textContent=complete?state.returned:'—';
+  const list=document.getElementById('divisorsList');list.innerHTML='';
+  if(complete){makeDivisors(state.factors).forEach(d=>{const el=document.createElement('span');el.className='chip';el.textContent=d;list.append(el);});}
+  else list.innerHTML='<span class="empty">З\'являться після завершення обчислення.</span>';
+}
+function renderLog(){
+  const box=document.getElementById('stepLog');box.innerHTML='';
+  trace.forEach((e,i)=>{const row=document.createElement('div');row.className='logrow'+(i===step?' active':'');const b=document.createElement('b');b.textContent=`${i+1}.`;const span=document.createElement('span');span.textContent=`Рядок ${e.line}: ${e.title}`;row.append(b,span);row.addEventListener('click',()=>{stopAuto();step=i;render();});box.append(row);});
+  const active=box.children[step];if(active)active.scrollIntoView({block:'nearest'});
+}
+function render(){
+  if(!trace.length)return;
+  const event=trace[step],state=event.state;
+  document.querySelectorAll('.code-line').forEach(el=>el.classList.remove('active'));
+  const code=document.getElementById('code-'+event.line);if(code)code.classList.add('active');
+  document.getElementById('explainTitle').textContent=explanations[event.line][0];
+  document.getElementById('explainText').textContent=explanations[event.line][1];
+  document.getElementById('explainDetail').textContent=event.detail;
+  renderVars(state);renderFactors(state);renderPrimes(state);renderResult(state);renderLog();
+  document.getElementById('stepCount').textContent=`Крок ${step+1} із ${trace.length}`;
+  document.getElementById('progressBar').style.width=`${((step+1)/trace.length)*100}%`;
+  document.getElementById('prevBtn').disabled=step===0;
+  document.getElementById('nextBtn').disabled=step===trace.length-1;
+  document.getElementById('finishBtn').disabled=step===trace.length-1;
+}
+function stopAuto(){if(timer){clearInterval(timer);timer=null;}document.getElementById('autoBtn').textContent='▶ Автопрохід';}
+function load(){
+  stopAuto();const n=Number(document.getElementById('numberInput').value);const m=Number(document.getElementById('maxInput').value);
+  if(!Number.isInteger(m)||m<2||m>10000){alert('max_n має бути цілим числом від 2 до 10000.');return;}
+  if(!Number.isInteger(n)||n<1||n>m){alert(`Введіть ціле число n від 1 до ${m}.`);return;}
+  maxN=m;originalNumber=n;primes=sieve(maxN);trace=buildTrace(n);step=0;render();
+}
+function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));stopAuto();window.scrollTo({top:0,behavior:'smooth'});}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
+document.getElementById('loadBtn').addEventListener('click',load);
+document.getElementById('resetBtn').addEventListener('click',()=>{stopAuto();step=0;render();});
+document.getElementById('prevBtn').addEventListener('click',()=>{stopAuto();if(step>0){step--;render();}});
+document.getElementById('nextBtn').addEventListener('click',()=>{stopAuto();if(step<trace.length-1){step++;render();}});
+document.getElementById('finishBtn').addEventListener('click',()=>{stopAuto();step=trace.length-1;render();});
+document.getElementById('autoBtn').addEventListener('click',()=>{if(timer){stopAuto();return;}if(step===trace.length-1)step=0;document.getElementById('autoBtn').textContent='Ⅱ Пауза';timer=setInterval(()=>{if(step<trace.length-1){step++;render();}else stopAuto();},650);render();});
+renderCode();primes=sieve(maxN);trace=buildTrace(originalNumber);render();
+</script>
+</body>
+</html>
